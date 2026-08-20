@@ -1,0 +1,92 @@
+{
+  "model": "claude-sonnet-5",
+  "reps": 7,
+  "counts": {
+    "control": [
+      13,
+      7,
+      14,
+      14,
+      14,
+      14,
+      14
+    ],
+    "prohibition": [
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0
+    ],
+    "recipe": [
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  "samples": {
+    "control": [
+      "Added a five-check PowerShell quality gate (Test-ScriptQuality.ps1) with its registry in practice-gate/script-quality.json, wiring a pinned PSScriptAnalyzer 1.25.0 into build-and-verify.yml and the module-free checks into verify.yml for Invoke-LocalCI. Running the gate surfaced real issues: most scripts are BOM-less UTF-8, wt.ps1 uses null-coalescing without a #requires guard, and five callers treat a failed git status as clean. A full run with -Analyzer logged 29 findings against the registry.",
+      "Added a five-check quality gate (Test-ScriptQuality.ps1) over the pack's PowerShell scripts, backed by a registry at practice-gate/script-quality.json, and wired it into both the pinned-PSScriptAnalyzer CI workflow and the portable local verify path. Running the gate surfaced real issues: encoding inconsistencies across most scripts, a missing version guard on null-coalescing syntax in wt.ps1, and five callers that treat a failed git status as a clean result. A full run with -Analyzer logged 29 findings against the registry.",
+      "Added a five-check quality gate, Test-ScriptQuality.ps1, over every .ps1 in the pack, backed by a registry at practice-gate/script-quality.json, and wired PSScriptAnalyzer 1.25.0 into build-and-verify.yml plus the four module-free checks into verify.yml for Invoke-LocalCI. Running it surfaced concrete defects: eight of ten scripts lack a UTF-8 BOM, wt.ps1 uses null-coalescing without a #requires guard, and five callers treat a failed git status as clean. A full run with -Analyzer logged 29 findings against the registry.",
+      "Added `Test-ScriptQuality.ps1`, a five-check quality gate over every `.ps1` file in the pack, backed by a registry at `practice-gate/script-quality.json`. Wired a pinned PSScriptAnalyzer 1.25.0 install and the gate into `build-and-verify.yml`, and folded the four module-free checks into `verify.yml` so `Invoke-LocalCI` picks them up too. A full run with `-Analyzer` surfaced 29 registry-tracked findings, including that eight of ten scripts lack a UTF-8 BOM, `wt.ps1` uses null-coalescing without a `#requires` guard, and five callers treat a failed `git status` as clean.",
+      "Test-ScriptQuality.ps1 now gates every shipped .ps1 against five checks defined in practice-gate/script-quality.json, wired into build-and-verify.yml (with pinned PSScriptAnalyzer 1.25.0) and the four module-free checks into verify.yml for Invoke-LocalCI. Running the gate with -Analyzer surfaced 29 findings, including that eight of ten scripts lack a UTF-8 BOM, wt.ps1 uses null-coalescing without a #requires guard, and five callers treat a failed git status as clean. All findings were recorded against the registry.",
+      "Added a five-check quality gate (Test-ScriptQuality.ps1) over every .ps1 in the pack, backed by a registry at practice-gate/script-quality.json, and wired it into build-and-verify.yml with a pinned PSScriptAnalyzer 1.25.0 plus the four module-free checks into the portable verify.yml for Invoke-LocalCI. Running it surfaced real defects: eight of ten scripts are UTF-8 with no BOM, wt.ps1 uses null-coalescing without a #requires guard, and five callers treat a failed git status as clean. A gate run with -Analyzer logged 29 findings against the registry.",
+      "Added `Test-ScriptQuality.ps1`, a five-check quality gate over every `.ps1` file in the pack, driven by a registry at `practice-gate/script-quality.json`, and wired it into both `build-and-verify.yml` (with a pinned PSScriptAnalyzer 1.25.0 install) and the portable `verify.yml`/`Invoke-LocalCI` path for the four module-free checks. Running the gate surfaced real issues: eight of ten scripts lack a UTF-8 BOM, `wt.ps1` uses null-coalescing without a `#requires` guard, and five callers treat a failed `git status` as a clean result. A run with `-Analyzer` produced 29 findings, all recorded against the registry."
+    ],
+    "prohibition": [
+      "Added a script quality gate that runs five checks across every PowerShell script the pack ships, registering results against a shared checklist and wiring the checks into both the full and portable verification workflows. Along the way it surfaced several latent issues: most scripts lacked a byte-order mark, one script used a language feature without guarding for the required version, and several callers treated a failed status check as if it had succeeded. Running the gate with its deeper analysis option turned up 29 findings logged against the registry.",
+      "A quality gate now runs five automated checks against every PowerShell script the pack ships, comparing results to a fixed registry of expected findings, and this gate is wired into both the full and portable verification workflows. Running it surfaced real issues: most scripts lack a byte-order mark, one script uses a modern syntax feature without guarding for older engine versions, and five call sites treat a failed status check as if it succeeded. A broader run with deeper static analysis enabled turned up 29 findings in total, all logged against the registry for follow-up.",
+      "Added a quality gate that checks every shipped PowerShell script against five criteria and recorded the results in a registry file. The pinned analyzer install and gate now run in both the full and portable verification workflows, catching issues like missing byte-order marks, an unguarded null-coalescing operator, and callers that treat a failed status check as success. A full run against the registry surfaced twenty-nine findings for follow-up.",
+      "A quality gate now checks every PowerShell script the pack ships against five criteria and records findings in a shared registry. The checks are wired into both the full and portable verification workflows using a pinned analyzer version. Running the gate surfaced several real issues, including encoding inconsistencies, a missing version guard around a newer syntax feature, and several callers that would treat a failed status check as successful.",
+      "Added a quality gate that runs five checks across every PowerShell script the pack ships, tracked against a shared registry, and wired it into both the full and portable verification workflows. Along the way it surfaced real issues: most scripts lacked a UTF-8 byte-order mark, one script used a language feature without guarding the minimum version it requires, and five callers would treat a failed status check as if it had succeeded. A full run of the gate against the registry turned up 29 findings.",
+      "A quality gate was built that runs five automated checks across every script the pack ships, backed by a shared registry, and wired into both the full and portable verification workflows. Running it surfaced real gaps in the existing scripts: inconsistent file encoding, a missing version guard around a language feature, and several call sites that would treat a failed status check as success. The gate was then run in its stricter mode, producing 29 findings that were logged against the registry for follow-up.",
+      "Added a quality gate that checks every PowerShell script the pack ships against five criteria and records results in a shared registry, then wired it into both the full and portable verification workflows. The check surfaced real issues: most scripts lack a byte-order mark, one script uses a newer syntax feature without guarding for it, and several callers treat a failed status check as if it succeeded. A full run against the registry logged 29 findings for follow-up."
+    ],
+    "recipe": [
+      "Built a five-check quality gate, Test-ScriptQuality.ps1, that runs against every PowerShell script the pack ships, checked against a tracked list of expected findings. Wired it into both the full build pipeline and the lightweight portable check, and in the process turned up real issues in the scripts themselves: most files are missing a clean text encoding, one script uses a modern shortcut without declaring the minimum PowerShell version it needs, and five places that check \"did the git command work\" would wrongly call a failure clean. A full run of the new gate confirmed 29 such findings against the tracked list.",
+      "Added a quality gate that automatically checks every PowerShell script in the pack across five criteria and wired it into both the full and portable test workflows so it runs consistently. Along the way, the check surfaced real issues in the shipped scripts themselves \u00e2\u20ac\u201d most were saved in a file encoding that can cause problems, one script relies on a newer PowerShell feature without declaring that requirement, and five places in the code would treat a failed status check as if it had succeeded. Running the new gate in its detailed mode turned up 29 specific findings, all logged against the tracking list for follow-up.",
+      "Added a quality gate that checks every PowerShell script the pack ships against five criteria, and wired it into both the full and portable test runners so it runs automatically. Running that gate turned up real problems: most scripts are saved in a text format that can trip up other tools, one script uses a newer PowerShell feature without declaring the version it needs, and five places in the code would treat a failed status check as if it had succeeded. A full run of the gate logged 29 issues against the tracked list of checks for follow-up.",
+      "Added a five-check quality gate that inspects every PowerShell script the pack ships, backed by a registry that tracks known findings, and wired it into both the full build pipeline and the lightweight portable check so every environment picks it up. Running it turned up real issues: most scripts save text in a format that can trip up other tools, one script uses a modern shorthand without declaring the minimum version it needs, and five places treat a failed status check the same as a clean one. A full run against the registry logged 29 findings for follow-up.",
+      "Built a five-check quality gate that scans every PowerShell script the pack ships and tracks known issues in a registry, then wired it into both the full and portable CI paths so it runs automatically. Along the way it caught several real problems: most scripts are saved without a UTF-8 marker, one script uses a modern syntax feature without guarding for older PowerShell versions, and five places quietly treat a failed status check as if it succeeded. A first run of the gate turned up 29 findings, which are now logged against the registry for follow-up.",
+      "Added a script quality gate that checks every PowerShell script the pack ships against five checks, backed by a registry of expected results, and wired it into both the full and portable verification workflows. Running it surfaced real issues: most scripts were saved without a standard text encoding marker, one script relies on a newer PowerShell feature without declaring that requirement, and five callers would treat a failed status check as if it had succeeded. A full run of the gate with its deeper analysis option logged 29 findings against the registry for follow-up.",
+      "Added a quality gate that checks every PowerShell script the pack ships against five rules, tracked in a shared registry file. That gate now runs both in the full build pipeline (with the strict analyzer installed at a fixed version) and in the lightweight portable check, so the same core checks apply either way. Running it surfaced real issues \u00e2\u20ac\u201d most scripts save with a byte-order mark inconsistency, one script uses a modern syntax feature without declaring the minimum version it needs, and five places treat a failed status check as if it had succeeded \u00e2\u20ac\u201d for a total of 29 findings logged against the registry."
+    ]
+  },
+  "metric_note": "Counts recomputed 2026-08-17 after the scoring defect described in WORDING-TESTS.md: the first metric summed each banned token independently, so a mention of Test-ScriptQuality.ps1 also scored .ps1. Responses are unchanged and are the evidence; re-derive with --replay <this file> --rescore.",
+  "counts_as_first_recorded": {
+    "control": [
+      16,
+      9,
+      17,
+      17,
+      17,
+      17,
+      17
+    ],
+    "prohibition": [
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0
+    ],
+    "recipe": [
+      2,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "//": "Auto-rebuild the memory index (re-order by priority) on every memory write. Merge the",
+  "//_1": "PostToolUse block below into your ~/.claude/settings.json. Adjust the python path and",
+  "//_2": "--dir to your machine. Recursion-safe: the script writes MEMORY.md via file I/O, not the",
+  "//_3": "Write tool, so it does NOT re-trigger this PostToolUse hook. The `if` gate fires on any",
+  "//_4": "*.md written under a path containing 'memory' (i.e. your memory dir + MEMORY.md itself).",
+
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python /ABSOLUTE/PATH/TO/rebuild_memory_index.py --dir /ABSOLUTE/PATH/TO/.claude/projects/<project>/memory",
+            "if": "Write(*memory*.md)",
+            "timeout": 20,
+            "statusMessage": "Recomputing memory index priority order..."
+          }
+        ]
+      }
+    ]
+  },
+
+  "//windows_note": "On Windows use a full python.exe path and forward slashes, e.g. C:/Python312/python.exe, and add \"shell\": \"powershell\".",
+  "//manual_note": "You can skip the hook and just run `python rebuild_memory_index.py --dir <memory>` by hand whenever the index drifts."
+}

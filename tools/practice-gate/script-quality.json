@@ -1,0 +1,115 @@
+{
+  "_comment": [
+    "Registry for Test-ScriptQuality.ps1 -- the static-analysis gate over the PowerShell this pack",
+    "ships. Three kinds of entry, and the difference between the first two is the whole point:",
+    "",
+    "  rule_exclusions  A rule this codebase has decided NOT to satisfy, anywhere, because the rule",
+    "                   and the house convention genuinely disagree. Turned off wholesale. Adding",
+    "                   one is a decision about the codebase, so each carries its reason here.",
+    "",
+    "  accepted         A rule this codebase DOES intend to satisfy, with named, counted exceptions",
+    "                   that have not been paid down. Checked in BOTH directions: a file/rule pair",
+    "                   whose count no longer matches fails, INCLUDING when the count has dropped to",
+    "                   zero. Fixing one of these turns the gate red and demands the entry be struck.",
+    "                   That is what stops this list becoming permanent invisible debt.",
+    "",
+    "  preamble_exempt  A script that legitimately does not set $ErrorActionPreference at script",
+    "                   scope. Two, and both have a reason that is about what the file IS.",
+    "",
+    "Counts are measured, never estimated: PSScriptAnalyzer 1.25.0, 2026-08-17, over the scope below.",
+    "They are exact on purpose. A >= comparison would let findings accumulate silently up to the",
+    "registered number, which is the failure mode this file exists to prevent."
+  ],
+
+  "scope": {
+    "_comment": [
+      "Derived by enumeration, never written down as a file list. A previous handoff put the number",
+      "of shipped scripts at six; it was nine, and a gate built from that list would have left three",
+      "files unanalysed while reporting a clean run. Directories are recursed for *.ps1.",
+      "install.ps1 is named individually because it sits at the repository root, outside the pack",
+      "boundary, and a recipient still runs it."
+    ],
+    "roots": [
+      "tools",
+      "install.ps1"
+    ],
+    "exclude_dirs": "[\\\\/](__pycache__|node_modules|\\.git)[\\\\/]"
+  },
+
+  "rule_exclusions": [
+    {
+      "rule": "PSAvoidUsingWriteHost",
+      "reason": "These are console tools whose output IS the product, and one of them has its report table PARSED by the other over stdout. Routing that through the success stream is the bug the rule would introduce, not prevent."
+    },
+    {
+      "rule": "PSUseSingularNouns",
+      "reason": "House naming, and the names are load-bearing elsewhere: renaming them ripples into the seven global aliases wt.ps1 sets and into the cross-gate parser that reads the dispatch list by name."
+    },
+    {
+      "rule": "PSAvoidUsingPositionalParameters",
+      "reason": "Fires only on each file calling its OWN helpers -- Assert-Case, Add-Result, Assert-Equal. The test idiom `Assert-Case 'what' 'expected' 'actual'` reads as a sentence positionally and as noise named. Information severity, 132 occurrences, no correctness content."
+    }
+  ],
+
+  "accepted": [
+    {
+      "file": "tools/claude-worktree-toolkit/wt.ps1",
+      "rule": "PSUseApprovedVerbs",
+      "count": 17,
+      "reason": "Reap- and Commit- are the verbs the user TYPES (rwt, cwt); renaming them is a breaking change for a human, not a refactor. The 14 _Wt- helpers parse as a verb '_Wt' only because the prefix contains a hyphen -- they are private and are not commands. Pay down only if the aliases move."
+    },
+    {
+      "file": "tools/claude-worktree-toolkit/wt.ps1",
+      "rule": "PSPossibleIncorrectUsageOfRedirectionOperator",
+      "count": 2,
+      "reason": "False positive. The rule looks for a comparison written as `>` inside an if-condition; what is actually there is `2>$null` on a git call inside the condition, which is deliberate and correct. Verified by reading both sites, 2026-08-17."
+    },
+    {
+      "file": "tools/claude-worktree-toolkit/wt.ps1",
+      "rule": "PSUseShouldProcessForStateChangingFunctions",
+      "count": 1,
+      "reason": "New-InvestWorktree. Worth revisiting -- a -WhatIf on worktree creation would be genuinely useful -- but ShouldProcess is not free: it makes $WhatIfPreference reach further into a file that also writes files, and that preference is exactly what makes Set-Content fail silently elsewhere in this pack."
+    },
+    {
+      "file": "tools/claude-worktree-toolkit/Test-WorktreeMergedness.ps1",
+      "rule": "PSUseShouldProcessForStateChangingFunctions",
+      "count": 3,
+      "reason": "New-Fixture, New-TempRoot, Remove-TempRoot -- test scaffolding that builds and removes real git repositories under %TEMP%. A -WhatIf that half-built a fixture would make the suite report on a repository it did not create."
+    },
+    {
+      "file": "tools/ci/Invoke-LocalCI.SelfTest.ps1",
+      "rule": "PSUseShouldProcessForStateChangingFunctions",
+      "count": 1,
+      "reason": "New-Fixture, same reason as the merged-ness suite: fixture construction, temp-scoped, and a partial build would be reported as a parser result."
+    },
+    {
+      "file": "tools/Test-SharePackClean.ps1",
+      "rule": "PSUseShouldProcessForStateChangingFunctions",
+      "count": 1,
+      "reason": "New-Stub, the self-test's stand-in for the called gate -- same genre and same reason as New-Fixture, New-TempRoot and New-ProbeScript: a fixture writer, temp-scoped, and a -WhatIf that half-wrote one would have the parser report on a file it did not create. WAS 2 UNTIL 2026-08-19, and the second was New-PackStage, deleted when staging moved to Build-SharePack.ps1 so that one file owns what the pack is. The builder's replacement is Copy-PackTree, deliberately NOT named New-*: this rule demands SupportsShouldProcess on a New-* function, and ShouldProcess is the mechanism that makes a writer report success having written nothing under -WhatIf. Paying the count down rather than carrying it is what this list is for -- a count that no longer matches fails in both directions, INCLUDING downwards."
+    },
+    {
+      "file": "tools/Test-ScriptQuality.ps1",
+      "rule": "PSUseShouldProcessForStateChangingFunctions",
+      "count": 1,
+      "reason": "New-ProbeScript, the self-test's fixture writer -- same genre and same reason as New-Stub, New-Fixture and New-TempRoot above. Found by this gate on its own first run against itself, which is the shortest available demonstration that the scope is enumerated rather than remembered."
+    },
+    {
+      "file": "tools/Test-PracticeClaims.ps1",
+      "rule": "PSReviewUnusedParameter",
+      "count": 2,
+      "reason": "MaxPinAgeDays and MaxFigureAgeDays are read by Test-HarnessPins and Test-Figures out of SCRIPT scope rather than being passed in, so the analyzer cannot see the use and neither can a reader. The finding is fair -- this is real dynamic-scope coupling. Left registered rather than hidden so it stays visible as work."
+    }
+  ],
+
+  "preamble_exempt": [
+    {
+      "file": "tools/claude-worktree-toolkit/wt.ps1",
+      "reason": "Dot-sourced from the user's $PROFILE, so a script-scope $ErrorActionPreference = 'Stop' would set it in the user's SESSION and change how every unrelated command in that shell behaves. It sets the preference per-function instead, which is the correct shape for a file that runs inside somebody else's scope."
+    },
+    {
+      "file": "tools/claude-worktree-toolkit/animal-lore.ps1",
+      "reason": "A data file: it declares one hashtable and returns it. There is no statement in it that can fail, and its only consumer already catches a load failure and degrades to an empty table."
+    }
+  ]
+}

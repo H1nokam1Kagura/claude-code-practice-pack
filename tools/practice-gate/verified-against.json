@@ -1,0 +1,314 @@
+{
+  "_comment": [
+    "Claims about Claude Code's OWN behaviour, and when each was last checked against a source.",
+    "",
+    "Every mechanic these documents describe — permission ordering, hook semantics, the memory-index",
+    "loader cut, what a keystroke does — is OBSERVED behaviour, not a documented API contract. It",
+    "moves without notice. The gate cannot know whether a claim is true and must never pretend to;",
+    "it asserts only that each claim names the version and date somebody last verified it, which is",
+    "the property that turns silent rot into visible staleness.",
+    "",
+    "This registry exists because an undated harness claim had already gone false on the page. The",
+    "front door asserted that double-Esc is 'not a rewind' and called the opposite belief a myth;",
+    "double-Esc on an empty prompt is exactly how you open the rewind menu.",
+    "",
+    "'markers' are literal substrings of the prose making the claim. A pin whose markers match no",
+    "prose is stale and fails: the claim was reworded or deleted and the pin outlived it.",
+    "",
+    "MARKERS ARE MATCHED CASE-SENSITIVELY (since 2026-08-17). Quote the prose exactly, including its",
+    "capitalisation, and list every capitalisation the prose actually uses -- a table cell saying",
+    "'Session checkpoint' and a sentence saying 'the session checkpoint' need two entries. This is",
+    "not pedantry: PowerShell's -match ignores case, so until it was tightened a marker could cover a",
+    "sentence about a DIFFERENT mechanism. 'the first match wins', written in a document about memory",
+    "tiering, was reported as pinned by the marker belonging to the permission-ordering claim. The",
+    "keyword fired, the marker absorbed it, and nothing failed. Note this is the same trap recorded",
+    "one level up in _keyword_note for 'statusLine', met on the other side of the same check.",
+    "",
+    "The KEYWORDS below are deliberately NOT case-sensitive: they are regexes carrying their own",
+    "inline flags. Do not make the two halves symmetric -- see the note at the check.",
+    "",
+    "Re-verifying means re-reading the source and then updating the date. Bumping the date on its",
+    "own silences the alarm without refreshing the claim, which is the drift this gate prevents."
+  ],
+  "sweep_exclusions": [
+    {
+      "path": "*/examples/*",
+      "reason": "Demonstration artifacts, where the FILE is the specimen. An example rules file's `paths:` frontmatter and an example skill's frontmatter are the thing being shown, not an assertion about how the harness treats them -- the surrounding prose makes the claim and is swept. Demanding a pin here sends the reader to date a code sample, and a gate that asks for work with no product is a gate people learn to route around."
+    }
+  ],
+  "_sweep_exclusions_note": [
+    "THIS LIST IS AN OPT-OUT. Everything under tools/ ending in .md is swept unless an entry here",
+    "excludes it, each entry states why the document cannot be pinned, an exclusion matching no file",
+    "is itself a finding, and the whole list is printed on every run.",
+    "",
+    "It was a whitelist -- `sweep_scope` -- until 2026-08-16, and the inversion was earned. A",
+    "whitelist fails in the direction nobody notices: a document nobody remembers to add is exempt",
+    "from the only check that dates its claims, and it is exempt SILENTLY, because a missing entry",
+    "and a document with nothing to pin look identical. It bit twice. The memory toolkit's README",
+    "asserted for months that auto-memory overflow was silent and unannounced; the harness had grown",
+    "a write-time reminder and an over-limit error, and no pin was ever demanded of the file because",
+    "it had never been listed.",
+    "",
+    "The original narrowing was not wrong when it was made -- sweeping the toolkit READMEs then",
+    "produced 15 findings against one document asserting nothing. But the KEYWORDS were narrowed",
+    "afterwards, from vocabulary to behavioural assertions (see _keyword_note), which removed the",
+    "reason for the narrowing, and nobody re-measured. Re-measured 2026-08-16 across every markdown",
+    "file under tools/: widening costs 3 findings, not 15, and two of the three were keywords inside",
+    "a fenced example rather than claims at all. A mitigation that outlives its cause is indistinguishable",
+    "from a mitigation that is still working."
+  ],
+  "harness_keywords": [
+    "\\bEsc\\b",
+    "double-Esc",
+    "/rewind",
+    "checkpoint",
+    "defaultMode",
+    "bypassPermissions",
+    "PreToolUse",
+    "(?-i)statusLine",
+    "NotebookEdit",
+    "context runway",
+    "paths:",
+    "first match wins",
+    "(?i)rules are per-tool",
+    "(?i)least[- ]invoked",
+    "(?i)character budget",
+    "(?i)description[s]?[^.]{0,30}(dropped|truncated)",
+    "(?i)loads only when"
+  ],
+  "_keyword_note": [
+    "Keywords name BEHAVIOURAL assertions about the harness, not vocabulary. 'per-tool' alone was",
+    "too generic: it fired on a sentence about attaching a per-tool contract to MCP tool metadata,",
+    "which is a claim about a server design and not about Claude Code at all. A keyword that flags",
+    "prose the pin system cannot meaningfully cover is a false alarm, and false alarms are how a",
+    "gate earns the reputation that gets it ignored. Narrowed to the phrase that states the claim.",
+    "",
+    "'statusLine' carries an EXPLICIT (?-i) because PowerShell's -match is case-insensitive by",
+    "default, so a keyword meant to name a settings key was also matching the ordinary English",
+    "'a statusline harness' in a paragraph about console encoding. Case is the whole signal here:",
+    "the camelCase spelling is the configuration surface, the spaced lowercase one is a noun. Found",
+    "2026-08-16 when the sweep was widened -- the keyword had never met that prose before.",
+    "",
+    "Keywords are matched as REGULAR EXPRESSIONS, not literals, which is why the inline flag works",
+    "and why a keyword containing regex metacharacters must be written deliberately.",
+    "",
+    "THE LAST FOUR KEYWORDS CLOSE A MEASURED HOLE, added 2026-08-19. Nothing in this list covered",
+    "skill-description or listing-budget vocabulary, so the 'skill-frontmatter-loading' pin was",
+    "effectively VOLUNTARY: its markers happened to match the prose that existed, and a NEW undated",
+    "claim of that class anywhere under tools/ would have passed unswept. That is the sweep_scope",
+    "whitelist failure arriving on the keyword side of the same check -- an absence that looks",
+    "exactly like nothing to check. The class matters because it is the one where this pack has",
+    "already been wrong: the shipped convention asserted a 1024-character description cap loading",
+    "into every system prompt, and the mechanism is a budgeted listing that DROPS descriptions.",
+    "",
+    "Cost, measured across every markdown file under tools/ on 2026-08-19: four findings, and all",
+    "four were the same claim quoted in four places (README, SKILL-FRONTMATTER twice, PRIOR-ART).",
+    "All four were resolved by adding markers to the pin that already covers the claim, which is the",
+    "only permitted resolution -- rewording the prose to dodge a new keyword is the failure this",
+    "branch has already corrected twice.",
+    "",
+    "Each of the four is written narrowly, and the near-misses are why:",
+    "  least[- ]invoked        - 'invoked least' is ordinary English about how often something runs,",
+    "                            and the harness prose uses that spelling one sentence from the claim",
+    "  character budget        - a BYTE or LINE budget this pack sets itself is not a harness claim;",
+    "                            the authoring README labels one a convention on purpose",
+    "  description...dropped   - the [^.]{0,30} window cannot cross a full stop, so a description in",
+    "                            one sentence and a dropped registry entry in the next stay separate",
+    "  loads only when         - 'loads only once, when' is a claim about frequency, not laziness",
+    "Every one of those pairs is a self-test control, asserted against THIS list by name on every",
+    "-SelfTest run, so editing a keyword here fails there rather than silently narrowing the sweep."
+  ],
+  "entries": [
+    {
+      "id": "esc-esc-rewind",
+      "claim": "Esc twice on an empty prompt opens the rewind menu; with text in the input it clears the input instead.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/checkpointing",
+      "markers": ["on an *empty* prompt opens the rewind"],
+      "note": "The claim this registry was built for. The document previously asserted the opposite and called the truth a myth. RE-READ 2026-08-19 against 2.1.235 and unchanged, in both halves and close to verbatim: 'Run /rewind, or press Esc twice when the prompt input is empty, to open the rewind menu' and 'If the prompt input contains text, double Esc clears it instead of opening the menu.' One detail the page adds that the documents do not claim and could usefully: the cleared text goes to input history, so Up recalls it."
+    },
+    {
+      "id": "rewind-coverage-limits",
+      "claim": "Checkpoint restore does not cover file changes made by shell commands, or symlinked/hard-linked paths (those are skipped with a 'Restored the code, but skipped N files' warning). Subagent edits are USUALLY not restored, with one exception: a foreground forked skill -- context: fork with background: false -- edits the working tree during your own turn, so rewinding restores its edits as usual. Every other subagent, including a background fork and a background code-review --fix, is not restored.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/checkpointing",
+      "markers": [
+        "file changes made by shell commands are not tracked",
+        "Session checkpoint",
+        "session checkpoint",
+        "outside the checkpoint entirely"
+      ],
+      "note": "THE CLAIM WENT PARTLY FALSE, found 2026-08-19 by re-reading the source at 2.1.235. 'Subagent edits are not restored' was flat and is now conditional: the checkpointing page's own heading still reads 'Subagent edits not restored', and the paragraph under it says 'Whether rewinding restores them depends on how the subagent runs' -- a FOREGROUND forked skill's edits ARE restored, because it edits your tree during your own turn. Narrowed rather than withdrawn, because the operative case is unchanged: the default for a fork is background, and a background fork is not restored. Note what could not have caught this, which is the same list as the per-tool row: the sentences carrying the claim never changed, so the marker check stayed green; the pin was four days inside its window, so the 180-day rule stayed green. TWO PROSE SITES STILL CARRY THE FLAT VERSION and are outside this pass's ownership -- CODING-WITH-CLAUDE-CODE.md line 132 ('subagent edits are not restored') and REVERSIBILITY.md line 106 (the Session checkpoint table row). Both need the exception added, and the fix is an exception clause, not a deletion. Both capitalisations of 'session checkpoint' are listed on purpose, and the reason arrived 2026-08-17 when marker matching became case-SENSITIVE. The prose says 'Session checkpoint' in a table cell and 'The session checkpoint' mid-sentence; a marker is a literal quotation, so one spelling does not stand in for the other. Under the old case-insensitive matching a single entry covered both, which is why this looked like a redundant pair in two other pins and was in fact the only thing holding this line covered. Do not 'tidy' either spelling away: dropping one silently unpins a paragraph."
+    },
+    {
+      "id": "permission-order-first-match",
+      "claim": "Permission evaluation order is deny then ask then allow; the first match wins and specificity is ignored.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/permissions#manage-permissions -- and, separately, measured on host against a replay corpus of previously-approved commands",
+      "markers": ["First match wins"],
+      "note": "RE-READ 2026-08-19 against 2.1.235: unchanged, and now DOCUMENTED rather than only measured. 'Rules are evaluated in order: deny, then ask, then allow. The first match in that order determines the outcome, and rule specificity doesn't change the order.' The source field gained the URL and kept the replay corpus, because the two are independent evidence for one claim and collapsing them would lose the less correlated half. Two consequences the page states and the documents do not: a broad deny cannot carry allowlist exceptions, and a bare tool-name deny removes the tool from Claude's context entirely rather than blocking calls to it."
+    },
+    {
+      "id": "floor-survives-auto",
+      "claim": "deny and ask survive defaultMode: auto and bypassPermissions, making the floor the only durable constraint. Allow rules, by contrast, have no effect in bypassPermissions. The one documented exception to the floor is EndConversation, which deny and ask rules do not apply to as long as Claude still has another tool it can call.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/permission-modes -- and, separately, measured on host",
+      "markers": [
+        "Survives `defaultMode: auto`",
+        "survive `defaultMode: auto`"
+      ],
+      "note": "RE-READ 2026-08-19 against 2.1.235: the load-bearing half is unchanged and is now documented rather than only measured -- 'Deny rules block in every mode, including bypassPermissions', and explicit ask rules 'still force a prompt' in auto and still prompt where bypass is available. This is the row the practice layer's installer rests on, so it was read first. Two refinements came with the re-read and are in the claim: allow rules are inert under bypassPermissions, and EndConversation is carved out of both deny and ask. The carve-out narrows 'the only durable constraint' by one tool and is worth stating rather than absorbing, because the sentence is absolute and the mechanism is not. Adjacent, and not the same claim: the page also records a circuit breaker where neither an allow rule nor a hook returning 'allow' can approve rm or rmdir against a critical path -- that is a floor the harness imposes on YOU, not one you set, so it is filed here as context rather than pinned as ours."
+    },
+    {
+      "id": "hook-tighten-only",
+      "claim": "A PreToolUse hook can only tighten permissions, never loosen them. Hook decisions do not bypass permission rules: deny and ask rules are evaluated regardless of what the hook returns, so a matching deny still blocks and a matching ask still prompts even when the hook returned 'allow'. The one direction a hook DOES override is an allow rule -- a hook exiting with code 2 stops the call before permission rules are evaluated at all.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/permissions#extend-permissions-with-hooks",
+      "markers": ["`PreToolUse` hook", "broad-allow-plus-hook-deny"],
+      "note": "RE-READ 2026-08-19 against 2.1.235: unchanged, still verbatim on the page, including the sentence the 2026-08-16 conflict turned on and the exit-2 asymmetry. Read first in this pass because the practice layer's installer now INSTALLS a PreToolUse hook, so this stopped being a claim about the harness in general and became a claim about a thing this pack does. One addition from the same page, which strengthens rather than qualifies it: a hook returning 'allow' also cannot approve rm or rmdir against a critical path, and cannot suppress the prompt for a connector tool an organisation set to ask. RESOLVED 2026-08-16, and it resolved in favour of the older pin rather than against it. This entry and 'hook-decision-schema' had a recorded conflict: the hooks page lists permissionDecision 'allow', which reads as a hook loosening a decision, and neither pin was edited on a hunch because whether that overrode a deny RULE had not been established. The permissions page states it outright -- 'Hook decisions don't bypass permission rules ... a matching deny rule blocks the call, and a matching ask rule still prompts even when the hook returned \"allow\" or \"ask\". This preserves the deny-first precedence.' So 'allow' suppresses the PROMPT, not the floor. The conflict was left standing and dated for six days rather than guessed at, which is what the rule 're-verify, do not just bump the date' looks like when it is actually followed; this is what closing one looks like. Note the asymmetry that came with the answer and is easy to get backwards: a hook cannot loosen a deny, but CAN override an allow, because exit code 2 short-circuits ahead of rule evaluation entirely."
+    },
+    {
+      "id": "rules-are-per-tool",
+      "claim": "Permission rules are per-tool: a rule written for one tool says nothing about another tool reaching the same file. A Write(path) rule is accepted and never consulted, and no file rule reaches a subprocess that opens the file itself.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/permissions#read-and-edit",
+      "markers": ["Rules are per-tool", "rules are per-tool"],
+      "note": "RE-READ 2026-08-19 against 2.1.235: unchanged and verbatim -- 'Claude Code checks file permissions against Edit(path) and Read(path) rules only. If you write a path rule for Write, NotebookEdit, Glob, or the legacy MultiEdit tool instead, Claude Code accepts the rule but never consults it, and warns at startup.' ONE TRAP THE ROW COULD BE READ INTO, added here rather than left to be inferred: the page distinguishes a PATH rule from a bare TOOL-NAME rule, and says Claude Code 'doesn't warn about a tool-name rule with no path, such as a deny rule for Write; it matches that rule at the tool level everywhere.' So a bare `Write` deny is real enforcement even though `Write(path)` is decorative. Nothing on the page or in the documents says otherwise; the risk is a reader compressing this row into 'Write rules do nothing'. RE-VERIFIED 2026-08-16, and the re-verification KILLED THE WORKED EXAMPLE while leaving the principle standing. This pin's evidence used to be four rules found by replay, the second of which was 'Read(**/.env) says nothing about cat .env'. That is no longer true -- see 'read-deny-covers-bash-file-commands'. The claim above was narrowed to what the source still supports, the dead example was retired from the documents rather than reworded, and the test that asserted it was renamed and kept to say so. This is the case the whole registry was built for and it is worth reading as one: the sentence carrying the claim never changed, nothing failed, and the pin was six days old -- so neither the marker check nor the 180-day freshness rule could have caught it. Only re-reading the source did. A pin makes rot VISIBLE to someone who looks; it does not look for you."
+    },
+    {
+      "id": "read-deny-covers-bash-file-commands",
+      "claim": "Read and Edit DENY rules reach the file commands Claude Code recognises in Bash -- cat, head, tail, sed -- but not arbitrary subprocesses that open files themselves, such as a Python or Node script. A Read deny also blocks the Edit and Write tools on the same path, including creating a new file there; NotebookEdit is NOT covered, so a path no tool may change needs an Edit deny of its own. Bare filenames follow gitignore semantics and match at any depth, so Read(.env) and Read(**/.env) are equivalent.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/permissions#read-and-edit",
+      "markers": [
+        "reaches the file commands Claude Code recognises in Bash",
+        "reach the file commands Claude Code recognises in Bash",
+        "It does not block NotebookEdit",
+        "but not NotebookEdit",
+        "does not cover NotebookEdit"
+      ],
+      "note": "RE-READ 2026-08-19 against 2.1.235: unchanged, every clause still on the page verbatim, including the NotebookEdit exclusion and the gitignore equivalence of Read(.env) and Read(**/.env). The page now carries VERSION FLOORS the claim did not mention and that a recipient on an older build needs: the Read-deny-covers-Edit-and-Write check requires 2.1.208 or later on edits and 2.1.228 or later on writes. Left out of the claim itself because the pack ships a floor, not a compatibility matrix, but recorded here because a recipient pinned below 2.1.228 has a weaker floor than the one this pack describes. This is the refinement that retired a shipped example. It also has a direct consequence for the code in this repository, recorded here because no sweep covers a .py file: replay_permissions.py models rules literally and per tool, so it does not model this layer and therefore UNDER-predicts denials -- it reports `cat .env` as ALLOW where the live harness blocks it. That is the safe direction for a regression detector, which can now miss a denial but still cannot invent one. The shipped floor in settings.template.json mirrors every Read deny as an Edit deny because of the NotebookEdit exclusion."
+    },
+    {
+      "id": "compound-split",
+      "claim": "Compound commands are split into subcommands and every segment must match independently. The recognised separators are && || ; | |& & and NEWLINES -- seven, not four. PowerShell is parsed through its AST, where | and ; always split and && and || split on PowerShell 7 or later.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/permissions#compound-commands -- and, separately, a replay corpus",
+      "markers": ["Compound commands split on"],
+      "note": "THE CLAIM WAS INCOMPLETE, found 2026-08-19 by re-reading at 2.1.235. It said four separators; the page enumerates seven: 'The recognized command separators are &&, ||, ;, |, |&, &, and newlines.' Not false, and incomplete in the SAFE direction -- more splitting means more segments checked, so nothing was under-guarded -- but a reader who took the list as exhaustive would think a backgrounding & or a newline-joined pair escaped matching, which is the opposite of true, and would write a permission rule on that belief. Widened rather than reworded. THREE PROSE SITES STILL SAY FOUR and are outside this pass's ownership: CODING-WITH-CLAUDE-CODE.md line 100, claude-permission-toolkit/COMMAND-SHAPE.md line 11, and claude-permission-toolkit/README.md lines 126 and 181. The marker deliberately stops at 'Compound commands split on' so it keeps matching all of them while they are widened; do not extend it to the separator list, or the pin goes stale on the edit that fixes the prose. Note also that neither the marker check nor the 180-day rule could have caught this: the sentence was accurate as far as it went."
+    },
+    {
+      "id": "rules-paths-glob",
+      "claim": "A .claude/rules/*.md file with a paths: glob loads when the model reads a file matching that glob -- on the read, not on every tool use. A rules file with no paths: field loads unconditionally at launch, at the same priority as .claude/CLAUDE.md.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/memory#path-specific-rules -- and, separately, measured on host",
+      "markers": ["with a `paths:` glob", "with `paths:`"],
+      "note": "RE-READ 2026-08-19 against 2.1.235: unchanged, and documented rather than only measured -- 'Path-scoped rules trigger when Claude reads files matching the pattern, not on every tool use.' The unconditional-load half was added to the claim because the pack ships a rules file and the two halves are one decision. Two behaviours on the page that no pin here asserts and no document depends on: brace expansion is bounded by a per-rule budget of 1,000 expanded patterns and a pattern that would exceed it is used UNEXPANDED, matching nothing; and a '[' that cannot be read as a bracket expression makes that one pattern match nothing while the rule's others keep working."
+    },
+    {
+      "id": "always-on-file-loads-in-full",
+      "claim": "A CLAUDE.md is loaded in full at the start of every session regardless of length -- nothing truncates it, and the documented target is under 200 lines because longer files reduce adherence. Block-level HTML comments are stripped before injection. A project-root file is re-injected after /compact; path-scoped rules and nested files are not.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/memory",
+      "markers": [
+        "loaded in full at the start of every session, however long it is",
+        "in full, at the start of every session, however long it is"
+      ],
+      "note": "RE-READ 2026-08-19 against 2.1.235: unchanged in every clause -- 'CLAUDE.md files are loaded in full regardless of length', 'target under 200 lines per CLAUDE.md file', block-level HTML comments 'stripped before the content is injected', and 'Project-root CLAUDE.md survives compaction ... Nested CLAUDE.md files in subdirectories and rules with paths: frontmatter are not re-injected automatically'. Read in this pass because the practice layer ships a CLAUDE.md fragment, so this is a claim about a thing the pack installs. One clause worth keeping in view when the fragment is edited: an @path import is expanded AT LAUNCH, so splitting a long file into imports organises it without reducing what loads. Pinned when the pointer-file template was written, and it corrected the draft: that had said 'loads into every prompt, in full, every turn', which is wrong twice -- it loads per SESSION, and is delivered as a user message after the system prompt. The 200-line figure moved from an invented default in check_pointer_file.py to a sourced one because of this lookup. The distinct 200-line/25KB limit on auto-memory's MEMORY.md is a DIFFERENT mechanism and does not apply to CLAUDE.md; conflating the two is the easy mistake here."
+    },
+    {
+      "id": "hook-decision-schema",
+      "claim": "A PreToolUse hook states a decision by writing hookSpecificOutput.permissionDecision to stdout and exiting 0. permissionDecision takes FOUR values -- allow, deny, ask, escalate -- and the object may also carry permissionDecisionReason and updatedInput. Exiting 0 with the JSON is the STRUCTURED channel, and it is not the only one: exit code 2 also blocks, ahead of permission-rule evaluation, but reports through stderr and discards the structured reason. matcher is matched against the tool name, accepts , and | alternation, and is treated as an unanchored regex once it contains anything outside letters, digits, _, -, space, comma and pipe.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/hooks",
+      "markers": [
+        "`hookSpecificOutput.permissionDecision`",
+        "the PreToolUse guard"
+      ],
+      "note": "THE CLAIM WAS WRONG IN TWO PLACES, found 2026-08-19 by re-reading at 2.1.235, and both are the compression rather than the source. (1) permissionDecision was recorded as taking 'allow, deny or escalate'. The page's decision-control table reads 'One of \"allow\", \"deny\", \"ask\", or \"escalate\"' -- FOUR values, and the missing one is the interesting one, because 'ask' is the value a guard wanting a prompt rather than a block should return, and a reader of the old claim would have reached for 'escalate'. (2) 'the exit code is not the refusal channel' is true of the STRUCTURED refusal and false as an absolute: exit 2 blocks the call, which this registry's own 'hook-tighten-only' pin has recorded since 2026-08-16. Two pins describing one mechanism disagreed with each other for three days and nothing failed, because a marker check cannot compare two claims. The prose the markers point at was already the careful version -- claude-permission-toolkit/README.md line 186 says the exit code is not the refusal channel and then immediately says a non-zero exit also blocks -- so this was a registry defect, not a document one, and it is the direction that is easiest to miss: the compression is what a later reader trusts. Also new since the last read: updatedInput lets a hook rewrite the tool input instead of refusing it, which is a capability no document here mentions. Pinned when the guard was packaged. The shipped hooks are JSON files and .ps1/.py, which the sweep does not cover -- so this pin is what dates the contract they depend on. The conflict this note used to record against 'hook-tighten-only' -- whether permissionDecision 'allow' can override a deny RULE -- was RESOLVED 2026-08-16 from the permissions page: it cannot. See that pin. Still re-verify the two together; they describe one mechanism from two sides."
+    },
+    {
+      "id": "settings-permissions-schema",
+      "claim": "permissions.{deny,ask,allow} and defaultMode live in the settings.json permissions object; managed, command-line, local, project and user settings layer in that priority order, and a user, project or local file that fails validation is rejected as a whole rather than partially applied.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/settings",
+      "markers": [
+        "Decide your own `defaultMode`",
+        "`permissions.deny`, `permissions.ask`"
+      ],
+      "note": "RE-READ 2026-08-19 against 2.1.235: unchanged, and the load-bearing half is verbatim -- 'User, project, and local settings files remain strict: a file that fails validation is rejected as a whole and reported.' Read second in this pass, after the hook rows, because the practice layer's installer safety design rests on it: an unknown key does not degrade the floor, it removes the floor. The scope restriction in the claim is exactly right and is worth not losing -- MANAGED settings are the documented exception, where 'Claude Code strips that entry, records a warning, and enforces every remaining valid policy', so a typo cannot disable an organisation's policy. The precedence order is unchanged: managed, command line, local, project, user. The whole-file-rejection half is why settings.template.json carries no explanatory `_comment` key: an unknown key that fails validation would take the entire floor down with it, silently, and the template's job is to be the thing that survives."
+    },
+    {
+      "id": "skill-frontmatter-loading",
+      "claim": "A skill's body loads only when the skill is used, while a listing of every skill's name and description is loaded up front. That listing has a character budget defaulting to 1% of the model's context window, and on overflow descriptions are DROPPED starting with the least-invoked skills; each entry's combined description text is separately truncated at 1,536 characters. In a personal or project skill, frontmatter 'name' is a display label and the invocation command comes from the directory name; in a bundled skill 'name' sets the command's last segment. Outside the CLI only six frontmatter fields are accepted -- allowed-tools, compatibility, description, license, metadata, name -- and an unrecognised top-level key is an error rather than being ignored; 'metadata' is the sanctioned free-form map and a non-map value there is dropped.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/skills",
+      "markers": [
+        "loads only when the skill is used",
+        "body loads only when it is used",
+        "character budget that scales with the model's context window",
+        "descriptions get **dropped**, starting with",
+        "dropped, least-invoked first",
+        "truncated at 1,536 characters",
+        "is a display label, and the command comes from the directory name",
+        "frontmatter fields survive that trip"
+      ],
+      "note": "RE-READ 2026-08-19 against 2.1.235: all four sub-claims unchanged and close to verbatim -- 'The budget scales at 1% of the model's context window. When the listing overflows, Claude Code drops descriptions starting with the skills you invoke least'; 'the combined description and when_to_use text is truncated at 1,536 characters in the skill listing'; 'In a personal or project skill, name sets only the display label ... and the command still comes from the directory name'; and the six-field list, which the page prints as its own error message ('Allowed properties are: allowed-tools, compatibility, description, license, metadata, name'). FIVE MARKERS, NOT ONE, since 2026-08-19: this pin was the one the new listing-budget keywords surfaced, and the four lines they found are the same claim quoted in four places -- claude-authoring-toolkit/README.md, SKILL-FRONTMATTER.md twice, and PRIOR-ART.md section 4, which is the only harness claim either new document makes. Every one was covered by adding the sentence it actually uses, never by editing the sentence. Do not consolidate these markers: they are five different spellings of one claim and each one is what holds its own paragraph covered. Two configuration surfaces arrived since the last read and neither is pinned because no document asserts them: skillListingBudgetFraction (or SLASH_COMMAND_TOOL_CHAR_BUDGET) raises the budget, skillListingMaxDescChars moves the per-entry cap, and skillOverrides can list an entry name-only to free budget. They matter to the claim's SHAPE rather than its truth -- both figures are defaults, which is why the documents call them the platform's and label the pack's own tighter number a convention. Pinned when the frontmatter contract was written, and the lookup CORRECTED the rule being extracted twice over. The source rule said a description is capped at 1024 characters and that this 'is what loads into every system prompt'. The cap is the author's own convention (the platform's is larger, and is a truncation rather than a rejection), and the mechanism is a skill LISTING with a context-proportional budget -- so the real risk is not a rejected file but a description silently dropped to make room, which no lint can see. The same lookup established that requiring 'name' to match its directory is a house rule in a personal or project skill and a real constraint only in a bundled one; skill-schema.json now encodes that difference per profile instead of applying one rule to both. All four claims come from one page and are re-verified together."
+    },
+    {
+      "id": "memory-index-loader-cut",
+      "claim": "Auto-memory loads only the first 200 lines or the first 25 KB of MEMORY.md, whichever comes first, at the start of every conversation; content past that point is not loaded. Topic files are not loaded at startup at all and are read on demand. The store lives at ~/.claude/projects/<project>/memory/, keyed by git repository, so every worktree and subdirectory of one repo shares a single directory and index.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/memory#auto-memory",
+      "markers": [
+        "lines, or the first 25 KB, of `MEMORY.md`",
+        "Topic files are not loaded at startup at all"
+      ],
+      "note": "RE-READ 2026-08-19 against 2.1.235: unchanged, verbatim on all three clauses -- 'The first 200 lines of MEMORY.md, or the first 25KB, whichever comes first, are loaded at the start of every conversation', 'Topic files like debugging.md or patterns.md are not loaded at startup', and 'The <project> path is derived from the git repository, so all worktrees and subdirectories within the same repo share one auto memory directory.' One addition that bears on a reader auditing their own store: since 2.1.214 a memory file that already has YAML frontmatter gets a `modified` ISO timestamp written into it on every write, and Claude Code never adds frontmatter to a file that has none -- so the presence of that field is not evidence of anything about a file that never had frontmatter. The toolkit's whole premise, and it went un-pinned for as long as the toolkit existed because the sweep was a whitelist and this README had never been added to it. Two figures were wrong when it was finally read: the byte limit is 25 KB and the document said ~24 KB, disagreeing with this registry's own note under 'always-on-file-loads-in-full'. Do not conflate this limit with the toolkit's OWN build target (CLAUDE_MEMORY_LINE_BUDGET, default 200, advised lower to bank headroom) -- one is the harness's cut, the other is a budget you set beneath it."
+    },
+    {
+      "id": "memory-overflow-is-signalled",
+      "claim": "Overflow of MEMORY.md is not silent. After a write, Claude Code measures the file against both limits: near a limit it reminds Claude to shorten the index, and over a limit the write still succeeds but an error is returned telling Claude to rewrite it. Only the content that loads is measured -- YAML frontmatter and block-level HTML comments are stripped before measurement; before v2.1.211 the raw file was measured and either could trip the error while the loaded content fit.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/memory#how-it-works",
+      "markers": [
+        "Overflow is no longer silent",
+        "the raw file was measured"
+      ],
+      "note": "RE-READ 2026-08-19 against 2.1.235: unchanged, including the v2.1.211 measurement change and the detail that matters most -- 'If the file is over a limit, the write still succeeds, but Claude Code returns an error telling Claude to rewrite the index, because everything past the limit is dropped on the next load.' The write succeeding is the part a reader is most likely to invert, and it is still true. THE CLAIM THAT HAD ALREADY GONE FALSE. The shipped README said the loader 'truncates the rest -- silently' and that 'you don't get told which memories vanished'. The harness grew a write-time reminder and an over-limit error, and the document kept asserting the old behaviour with total confidence, because nothing dated it and nothing swept it. Corrected without overcorrecting: the tail is still dropped, the signal names no entry, and a reminder is not a gate -- which is this pack's own standing rule turned on the harness that now warns. Note the second-order consequence recorded in the README rather than here: the toolkit's own budget is line-based only, so the 25 KB half of the cut is unguarded by it."
+    },
+    {
+      "id": "auto-memory-configuration",
+      "claim": "The auto-memory store's location is set by autoMemoryDirectory (an absolute or ~/-prefixed path, readable from any settings scope), and the feature is toggled by autoMemoryEnabled or the CLAUDE_CODE_DISABLE_AUTO_MEMORY environment variable.",
+      "verified_against": "2.1.235",
+      "verified_on": "2026-08-19",
+      "source": "https://code.claude.com/docs/en/memory#storage-location",
+      "markers": ["`autoMemoryDirectory`"],
+      "note": "RE-READ 2026-08-19 against 2.1.235: unchanged. autoMemoryDirectory is still readable from any settings scope, still must be absolute or ~/-prefixed, and CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 still switches the feature off. One condition the claim does not carry and a recipient installing into a shared repo should: set in a project's .claude/settings.json it is honoured under the same workspace-trust rule as hooks in settings files, so it does not take effect in an untrusted folder. Pinned because the toolkit ships its own CLAUDE_MEMORY_DIR / --dir, which point the SCRIPT at a directory and do not relocate the real store. A reader who assumed otherwise would reorder an index the harness never reads."
+    },
+    {
+      "id": "context-runway-statusline",
+      "claim": "A status line can report context runway, turning the handoff decision into a threshold on a number.",
+      "verified_against": "2.1.233",
+      "verified_on": "2026-08-10",
+      "source": "measured on host",
+      "markers": ["status line reporting context runway"],
+      "note": "DELIBERATELY LEFT AT ITS OLDER DATE by the 2026-08-19 pass, and saying so is the point. The re-verification was prioritised by what this pack now ships and what is most likely to have moved -- the permission rows, the PreToolUse rows, the settings-layering row, the skill listing and CLAUDE.md loading rows, and the auto-memory rows, every one of which is a claim about a mechanism the practice layer installs or a document it distributes. This row is none of those: it is a capability statement about a status line the pack does not ship, and it is the one row still inside its 180-day window with no consumer. It will expire on its own in February. Bumping it to 2.1.235 without opening the statusLine documentation would have been the exact move this file forbids -- a blanket date change wearing the shape of a re-verification -- and a partial pass labelled honestly is worth more than a complete one that is not."
+    }
+  ]
+}

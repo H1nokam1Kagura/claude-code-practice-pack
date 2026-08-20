@@ -1,0 +1,145 @@
+{
+  "_comment": [
+    "Probes for the five practice-layer skills, in the shape probes.example.json documents.",
+    "",
+    "THE NON-TRIGGERING PROBES ARE THE HARD HALF, AND THESE FIVE SKILLS ARE EACH OTHER'S NEAREST",
+    "NEIGHBOURS. That is not an accident of naming -- they were carved out of one set of documents,",
+    "so they share a vocabulary almost word for word. verification-before-claiming and",
+    "git-comparison-choice both answer 'is this actually true'. reversibility-before-destructive and",
+    "handoff-discipline both answer 'before you do the thing you cannot take back'. Every negative",
+    "below is aimed at one of the other three, and _neighbours names which. A negative aimed at the",
+    "weather would measure a confusion nobody was going to make and report an accuracy none of these",
+    "has earned.",
+    "",
+    "One easy negative is kept per skill as a floor, and it is labelled as such rather than left to",
+    "look like a real defence. Four and four is the convention, not a rule the script enforces.",
+    "Phrasing is varied deliberately: four rewordings of one sentence measure one thing four times.",
+    "",
+    "TWO DEVIATIONS BELONG TO agent-orchestration, AND BOTH ARE DELIBERATE. It keeps NO floor",
+    "negative: it is the only skill here with four nearest neighbours rather than three -- the other",
+    "four all concern reviewing, comparing, destroying or writing up work an agent produced -- so the",
+    "slot the other sets spend on a definition request is spent on the fourth neighbour instead. The",
+    "floor is already established four times over above it, and a fifth definition request would",
+    "measure a confusion nobody was going to make.",
+    "",
+    "AND THE OTHER FOUR SETS DO NOT YET CARRY A NEGATIVE AIMED AT agent-orchestration, which is a",
+    "known gap rather than a judgement that none is needed. It arrived as the fifth skill and became",
+    "a neighbour to all four in the same move; the nearest collision is with",
+    "verification-before-claiming, since both concern reviewing output. Recorded here rather than",
+    "closed quietly, because a defence measured in one direction only reports an accuracy the pair",
+    "has not earned.",
+    "",
+    "'exempt' is empty and should stay that way here. It is the one place a coverage gate can be",
+    "silenced, so an entry without a stated reason is a silencer rather than a decision -- the",
+    "loader rejects one."
+  ],
+
+  "exempt": {},
+
+  "probes": {
+    "verification-before-claiming": {
+      "triggering": [
+        "You said the fix works. How would I know that from the outside?",
+        "This suite is green. Should I believe it, or is it green for the wrong reason?",
+        "Before you write the function, tell me what would prove it is right.",
+        "That scan reported no findings in about a second. Is that a pass?"
+      ],
+      "non_triggering": [
+        "Two diffs of this branch disagree about how many files it touched. Which one is right?",
+        "I am about to drop the staging tables. Walk me through making that recoverable first.",
+        "I am nearly out of room in this window -- write up where we got to.",
+        "Rename this variable so it matches the one in the caller."
+      ],
+      "_neighbours": [
+        "1 -> git-comparison-choice: same subject (is this claim true) but the instrument is a diff, and the answer is a choice between comparisons rather than a choice of reviewer.",
+        "2 -> reversibility-before-destructive: 'prove it first' is the shared phrase; here it is proving a SET before a delete, not proving a claim before an assertion.",
+        "3 -> handoff-discipline: a handoff status section is full of verified-versus-not language, which is the likeliest collision of all four.",
+        "4 -> ordinary editing work, kept as one easy negative to floor the set."
+      ]
+    },
+
+    "reversibility-before-destructive": {
+      "triggering": [
+        "Write me a script that clears out the orphaned rows. I want to be able to undo it.",
+        "The backup finished and exited zero. Is that enough before I overwrite the store?",
+        "How do I stage this bulk update so a partial failure is survivable?",
+        "I need to delete about half of these files. What has to happen before I do?"
+      ],
+      "non_triggering": [
+        "Is this branch's work already in the base branch, or am I about to lose it?",
+        "Design the check that proves the migration produced the numbers it claims.",
+        "Stop here and write this up cleanly so a new session can carry on tomorrow.",
+        "Explain what a write-ahead log is."
+      ],
+      "_neighbours": [
+        "1 -> git-comparison-choice: a keep-or-delete decision, which is a delete decision, but the hard part is which comparison answers it -- not the rollback.",
+        "2 -> verification-before-claiming: 'design the check' is the shared trigger; the subject is a claim about numbers, not an irreversible step.",
+        "3 -> handoff-discipline: both fire at the end of a piece of work and both say 'before you do the thing you cannot take back'. The tell is that nothing is being destroyed.",
+        "4 -> a definition request, kept as the floor negative."
+      ]
+    },
+
+    "handoff-discipline": {
+      "triggering": [
+        "Wrap this session up for a fresh one -- I will pick it up in a new window.",
+        "Can you write down where we are so somebody else can take it from here?",
+        "I am running low on context. Do we compact or hand off?",
+        "Note down what we decided and what is still open, then stop."
+      ],
+      "non_triggering": [
+        "Give me a one-line progress update -- are you halfway through the refactor?",
+        "The changes were merged. Confirm they are actually on the base branch.",
+        "Before you clear the export directory, prove which files are safe to remove.",
+        "Summarise this design document for the team."
+      ],
+      "_neighbours": [
+        "1 -> nothing in this set, and that is the point: a mid-task progress report is what this skill is most often mistaken FOR, and it must decline rather than write a document about an inconsistent state.",
+        "2 -> git-comparison-choice: 'confirm it landed' is a status claim, which is exactly the sentence a handoff would carry -- but the question asked is which comparison settles it.",
+        "3 -> reversibility-before-destructive: 'prove it before you do it' phrased identically, aimed at a delete.",
+        "4 -> a generic summarisation request, which any writing skill over-claims. The floor negative."
+      ]
+    },
+
+    "git-comparison-choice": {
+      "triggering": [
+        "Is it safe to delete this branch, or is some of it still only here?",
+        "The push said everything was up to date but the file is not on the remote. What happened?",
+        "Compared one way this branch adds twelve files, compared the other way three. Explain.",
+        "It was squash-merged. Why does the merged-ness check still say no?"
+      ],
+      "non_triggering": [
+        "Rank the ways of reviewing this output from most to least independent.",
+        "The branch is dead. Delete it and the worktree, but make that reversible.",
+        "Record the branch and commit we are on so the next session lands in the right tree.",
+        "What does a fast-forward merge mean?"
+      ],
+      "_neighbours": [
+        "1 -> verification-before-claiming: the independence ladder is its content, and both skills are about whether an answer can be trusted. Nothing here is a comparison.",
+        "2 -> reversibility-before-destructive: the delete decision is already made, so what is wanted is the recovery window rather than the evidence.",
+        "3 -> handoff-discipline: branch and commit are shared vocabulary, and the resume block is where they appear -- but this is a request to write a handoff field, not to compare anything.",
+        "4 -> a definition request about git itself, kept as the floor negative."
+      ]
+    },
+
+    "agent-orchestration": {
+      "triggering": [
+        "I want one agent to draft this and a second to check it. What should the checker not be allowed to see?",
+        "My review panel passes everything. Three judges, all agreeing, and the scores only ever go up.",
+        "Two subagents both edited the registry and half of the first one's work is gone. How should I have split this?",
+        "Set up the fan-out for this audit — who plans, who fetches, who scores, and where does the run stop?"
+      ],
+      "non_triggering": [
+        "The auditor scored this a five. How would I know from the outside that the score is right?",
+        "Two agents worked this branch and the two diffs disagree about what it adds. Which comparison settles it?",
+        "Before the cleanup agent runs over the export directory, make that recoverable.",
+        "Three parallel sessions have been on this all week. Write up where each one got to so tomorrow's window can carry on."
+      ],
+      "_neighbours": [
+        "1 -> verification-before-claiming: THE NEAREST NEIGHBOUR, and the whole vocabulary is shared -- auditor, score, from the outside. The boundary is that this probe asks whether ONE claim is true, which is answered by choosing a check whose mistakes are independent of the claim; this skill would answer a different question, namely how to arrange the roles so that a score is worth reading at all. Structuring roles versus adjudicating a claim.",
+        "2 -> git-comparison-choice: 'two agents' is this skill's own subject matter and is a decoy here. Nothing is being decomposed and no role is being assigned; the question is which of two comparisons answers what the branch adds, and it would have the same answer with one author.",
+        "3 -> reversibility-before-destructive: an agent is doing the work, which is the shared surface, but the ask is the recovery window for a step that cannot be taken back. No split, no panel, no write-scope table -- and the answer is the same whether a person or an agent runs it.",
+        "4 -> handoff-discipline: 'three parallel sessions' is the closest this set comes to a trap, because parallel work is exactly what this skill plans. The tell is the deliverable: a document for a later reader, not a decomposition for a dispatcher. The work has already happened, so there is nothing left to assign."
+      ]
+    }
+  }
+}

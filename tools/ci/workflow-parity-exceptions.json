@@ -1,0 +1,238 @@
+{
+  "_comment": [
+    "Steps that exist in one CI workflow and not the other, DELIBERATELY, each with the reason it",
+    "is deliberate.",
+    "",
+    "  .github/workflows/build-and-verify.yml   the hosted gate -- three jobs, a runner we own, and",
+    "                                           everything that needs the full repository or a",
+    "                                           pinned binary somebody had to install",
+    "  tools/ci/verify.yml                      the portable copy -- shipped, and PARSED by",
+    "                                           tools/ci/Invoke-LocalCI.ps1, which is the only",
+    "                                           thing anyone can run before pushing",
+    "",
+    "check_workflow_parity.py compares the two step-for-step on the NORMALISED COMMAND TEXT, never",
+    "the step name -- the two files name the same command differently in three places, and a",
+    "name-keyed gate would report drift on pairs that are identical in the only field that",
+    "executes. Anything present in one workflow and not the other, and not registered here, fails.",
+    "",
+    "THREE KINDS, and the distinction is most of the value of this file:",
+    "  provisioning  asserts nothing. It exists to make something else resolvable -- a package the",
+    "                Python gates import, a pinned binary a flag below it needs. When one of these",
+    "                silently yields nothing, the gate that depends on it must FAIL rather than",
+    "                skip; that is a property of the gate, not of this entry, and it is why a",
+    "                provisioning step is registered rather than deleted.",
+    "  ci-only       a real gate that cannot run on the far side. Two families: it reads a tree the",
+    "                share pack does not carry, or it needs the full repository -- .github/,",
+    "                commands/, skills/ and evals/ are not shipped. Plus two that are structurally",
+    "                impossible to mirror; those say so themselves.",
+    "  variant       the SAME script on both sides with different flags. Records BOTH commands, and",
+    "                both are compared against live text, so a flag added on either side fails here",
+    "                rather than hiding under the entry written for the older difference. Read the",
+    "                four of them before assuming which side is the superset: two carry the extra",
+    "                flag on the PORTABLE side.",
+    "",
+    "Three rules, all learned elsewhere in this repository:",
+    "  - 'reason' is required, and should explain why the two SHOULD differ, not why they do. An",
+    "    exemption nobody justified is a silencer, not a decision.",
+    "  - an entry whose command has since been MIRRORED also fails. An exemption for a difference",
+    "    that no longer exists is one nobody granted, and it will silently absorb the next one.",
+    "  - an entry whose recorded command is no longer in the workflow it names fails too. It points",
+    "    at nothing, and a registry of dead entries reads exactly like a registry doing work.",
+    "",
+    "'workflow' is 'ci' or 'portable' rather than a path, because the paths are the gate's flags and",
+    "a registry that hardcoded them would break the moment either file moved. 'label' is display",
+    "only -- it happens to be the step name, which is deliberately NOT the key.",
+    "",
+    "WILDCARDS. A recorded command may use '*', matching any run of characters, and it appears here",
+    "for exactly two narrow reasons. (a) Two entries record a multi-line install body: transcribing",
+    "the whole shell script would duplicate it rather than pin it, so the VERSION -- the part a bump",
+    "must fail on -- stays literal and the tail is elided. (b) Eight entries elide ONE leading path",
+    "segment, because the live text names a repository directory that this pack's own redaction gate",
+    "(tools/Test-PracticeClaims.ps1, check C) forbids this file to reproduce, and a registry that",
+    "cannot pass the gate it sits beside is not a registry. Everything after a wildcard stays",
+    "literal, so a flag change still fails; there is a negative control for exactly that.",
+    "",
+    "THIS GATE IS WIRED INTO BOTH OF THE FILES IT GATES, which means adding it changed the very",
+    "counts it measures: two steps in each workflow, hosted 42 -> 44 and portable 22 -> 24",
+    "(2026-08-17). Those four are identical on both sides, so they are MIRRORED and need no entry",
+    "here -- but a registry that did not account for its own steps would be exactly the blind spot",
+    "this one exists to close, so it is written down rather than left to be noticed."
+  ],
+  "exceptions": [
+    {
+      "kind": "provisioning",
+      "workflow": "ci",
+      "label": "(unnamed) pip install PyYAML -- three occurrences, one per job",
+      "command": "pip install PyYAML --quiet",
+      "reason": "Asserts nothing; it exists so the Python gates below it can import yaml. Three occurrences, one in each of the three jobs, because a job gets its own runner and therefore its own site-packages -- so this entry covers all three rather than being written out three times, and the cardinality is the point rather than an accident. It will never auto-match its portable counterpart: that one spells the same install `python -m pip install PyYAML --quiet`, which is different text AND a different count, and the only ways to make them match would be to normalise away the interpreter or to compare loosely -- either of which would relax the comparison for every real gate as well."
+    },
+    {
+      "kind": "provisioning",
+      "workflow": "portable",
+      "label": "Install the one third-party dependency",
+      "command": "python -m pip install PyYAML --quiet",
+      "reason": "The portable half of the same install, and the module form on purpose: a recipient's PATH may carry a `pip` belonging to a different interpreter than the `python` every other step in this workflow uses, and `python -m pip` cannot disagree with itself. One step here against three there, because this workflow is one job. Registered rather than reconciled -- rewriting either side to match the other would make one of the two files wrong about its own runner for the sake of a string comparison."
+    },
+    {
+      "kind": "provisioning",
+      "workflow": "ci",
+      "label": "Install the pinned secret scanner",
+      "command": "$ErrorActionPreference = 'Stop' $url = 'https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/*",
+      "reason": "Downloads a pinned secret scanner so the -Gitleaks variant below it can resolve a binary; it asserts nothing itself. It has no business in the portable workflow: that file is what a recipient runs, on a machine we do not own and possibly offline, and a download there would be both a multi-line body its own runner refuses to guess at and a step that fails for a reason the recipient never chose. Enforced where we control the machine, degraded on the report's own face where we do not. Note the fail-closed shape it buys: if this install silently yields nothing, the flag below cannot resolve a binary and the gate FAILS rather than skipping, because a requested scan that did not happen is not a pass. The version is recorded literally, so a bump must be made deliberately and fails this entry rather than sliding through."
+    },
+    {
+      "kind": "provisioning",
+      "workflow": "ci",
+      "label": "Install the pinned PowerShell analyzer",
+      "command": "$ErrorActionPreference = 'Stop' Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.25.0 *",
+      "reason": "Same shape and same fail-closed argument as the secret scanner above, for the static analyser the -Analyzer variant needs. This is also the step that provoked the gate reading this file: it was added on 2026-08-17 and took the hosted step count from 41 to 42, and nothing anywhere recorded that the divergence had grown, because the only record of it was a sentence in a handoff document. Pinned rather than floating because the gate it serves compares finding counts EXACTLY -- a new rule in a newer analyser is a real finding and should be read on a version bump somebody chose, not on whatever the gallery served that morning."
+    },
+    {
+      "kind": "variant",
+      "label": "the share-pack scan",
+      "ci_command": "tools/Test-SharePackClean.ps1 -Gitleaks",
+      "portable_command": "tools/Test-SharePackClean.ps1",
+      "reason": "Same script; the hosted side adds -Gitleaks because that is the runner we own and the scanner is installed two steps above it. The portable side deliberately runs the built-in shape scan instead, and its report says on its own face that it is a shape scan rather than a full one -- a recipient has whatever scanner they have, and a gate that exits non-zero because a binary they never asked for is absent is a gate they will stop reading. Required where we control the machine, opt-in where we do not, and the difference is visible in the output rather than only here. Both sides are recorded, so a flag added to either fails."
+    },
+    {
+      "kind": "variant",
+      "label": "the script-quality gate",
+      "ci_command": "tools/Test-ScriptQuality.ps1 -Analyzer",
+      "portable_command": "tools/Test-ScriptQuality.ps1",
+      "reason": "Same argument as the share-pack scan above, one gate along. The analyser is a gallery module a recipient may not have and may not be able to fetch, and an install step in the portable workflow would be a multi-line body that file's own runner refuses to guess at. The checks that need no module still run on both sides and still measure real properties; the one that does reports on its own face that no static analysis happened, which is why the portable side is a narrower claim rather than a quieter one."
+    },
+    {
+      "kind": "variant",
+      "label": "arbitrary-execution detector parity",
+      "ci_command": "python tools/claude-permission-toolkit/check_interpreter_parity.py",
+      "portable_command": "python tools/claude-permission-toolkit/check_interpreter_parity.py --harness skills/build-compliance/scripts/checks/harness.py",
+      "reason": "The EXTRA flag is on the PORTABLE side, which is the direction that catches people out -- this is not the hosted job doing more. The flag names the same path the tool computes as its default in this repository; it is written out in the portable file so that file STATES its second side rather than relying on a default derived from where the script happens to sit. A distribution lays that half out somewhere else, and a gate that guessed would report `not applicable` on a tree that has it, which is the vacuous pass this repository keeps finding. Both sides are recorded, so a path change on either fails here rather than under an entry written for the other."
+    },
+    {
+      "kind": "variant",
+      "label": "lint-parity gate, live run",
+      "ci_command": "python tools/claude-authoring-toolkit/check_lint_parity.py",
+      "portable_command": "python tools/claude-authoring-toolkit/check_lint_parity.py --repo-lint .github/scripts/lint_skills.py",
+      "reason": "Same shape and same direction as the entry above: the extra flag is again on the portable side and again names the tool's own in-repo default explicitly. The half it points at lives under .github/, which the hosted runner checks out and a distribution does not ship at all -- so on a recipient's tree this exits 2, the comparison does not apply, which is the honest answer and is why the path is stated rather than guessed."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Build every profile (strict)",
+      "command": "Build-InvestorProject.ps1 -All -Force -Strict",
+      "reason": "Renders every profile with -Strict, which turns an unresolved token from a warning into a build failure. It runs inside the release-bundle tree -- the step sets its own working directory -- and that tree is not in the share pack, so a recipient has no profiles to build and no builder to build them with. Hosted-only for scope, not for cost."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Plugin parity",
+      "command": "*/po-scoring-marketplace/tools/Check-PluginParity.ps1",
+      "reason": "Compares a flat bundle against the marketplace plugin derived from it, baselined so that known editorial divergence stays silent and only NEW drift fails. Both sides of that comparison live in the release-bundle tree, which the share pack does not carry, so there is nothing for a portable copy of this step to read."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Plugin is generated, not hand-edited",
+      "command": "*/po-scoring-marketplace/tools/Derive-Plugin.ps1 -Check",
+      "reason": "Regenerates the plugin from the bundle and requires no diff. The parity step above does not cover this: it strips frontmatter before diffing, so a hand-edited file can pass at residual zero while differing from what the generator produces -- which is how three identifiers diverged unnoticed before the generator existed. Same scope answer as everything else in this job: the tree it regenerates is not shipped."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Version consistency",
+      "command": "*/tools/Sync-BundleVersion.ps1 -Check",
+      "reason": "Holds every derived version copy to the one canonical VERSION file. The derived copies are bundle manifests, and the bundles are not in the share pack. Worth recording for whoever ships this next: this step printed `every derived copy matches its VERSION file` while one manifest had drifted through two releases, which is why it is a hosted gate rather than a habit."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Scoring-suite gate can fail (negative controls)",
+      "command": "python */plugins/scoring-suite/validation/mutation_test.py",
+      "reason": "The negative controls for the scoring-suite gate below: it stages a temporary copy of the tree, injects real regressions one at a time, and requires each to be caught BY THE INTENDED CHECK GROUP -- a mutation killed by the wrong check is reported as misattributed, not as a pass. Suite, harness and ground truth all live in the release-bundle tree, which is not shipped."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Scoring-suite validation gate",
+      "command": "python */plugins/scoring-suite/validation/gate.py",
+      "reason": "The live run whose controls are registered above. It drives three further tools as subprocesses with the working directory pinned to its own, which is what keeps them from rewriting the checked-out ground truth -- so they need no step of their own and get no entry of their own. Not portable for the same reason as its controls: the tree it validates is not in the share pack."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Scoring harness smoke (recall + run_kind guard)",
+      "command": "python */plugins/scoring-suite/validation/smoke_harness.py",
+      "reason": "The one assertion the gate above does not cover -- that production records are not graded against the frozen evaluation ground truth. Same tree, same scope answer. Registered separately rather than folded into the entry above because they are two different claims, and a registry that grouped them would let one disappear without a word."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Catalog page is generated, not hand-edited",
+      "command": "python */workflows-app/Render-Catalog.py *",
+      "reason": "Doubly unportable, and both halves are worth stating. It reads a manifest in the release-bundle tree, which is not shipped; and it is a multi-line `run: |` body, which the portable workflow's own runner refuses to guess at rather than half-execute, so it could not be moved even if the tree were there. Either alone would make it hosted-only. Recorded with its tail elided because the body is a regenerate-and-diff script, not a command."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Bundle doctrine is generated, not hand-edited",
+      "command": "python */lenses/Render-Doctrine.py --check",
+      "reason": "The same generated-not-hand-edited contract as the catalog page, for the review doctrine duplicated into each bundle. Reads the on-disk file in text mode, so it needs no diff dance and is a single line -- but the bundles it reads are not shipped, which is the only reason it is hosted-only."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Command-parity gate can fail (negative controls)",
+      "command": "python .github/scripts/check_command_parity.py --self-test",
+      "reason": "Negative controls for the gate that holds each installed command description to its skill twin. The gate lives under .github/scripts/ and reads commands/ and skills/, none of which is in the share pack, so the portable workflow has nothing to point at. Registered separately from the live run below on purpose: controls and live run are two different claims, and a single entry covering both would let either one disappear silently."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Installed command descriptions match their skill twins",
+      "command": "python .github/scripts/check_command_parity.py",
+      "reason": "The live run of the gate whose controls are registered above. Same scope: the description a recipient routes on is not a file they receive from here, and neither of the two trees it compares is shipped. Exit 2 on this runner fails the job deliberately, because this runner HAS the whole repository -- which is exactly the property a portable copy would not have."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Eval-parity gate can fail (negative controls)",
+      "command": "python .github/scripts/check_eval_parity.py --self-test",
+      "reason": "Negative controls for the gate that holds the two triggering-eval implementations to each other. The repo-side eval lives under .github/scripts/ and is not shipped; the toolkit-side one is -- which is precisely why the comparison cannot be run from the portable half alone, and why the portable workflow would report a scope answer rather than a measurement."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "The two triggering evals agree, or every difference is registered",
+      "command": "python .github/scripts/check_eval_parity.py",
+      "reason": "The live run of the gate above. On a tree carrying only the shipped copy it exits 2 -- the comparison does not apply -- which is the right answer and not one worth spending a portable step on, since a step that can only ever report `not applicable` teaches a recipient to ignore the report."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Routing harness scoring and exit contract (offline controls)",
+      "command": "python evals/triggering-harness/trigger_harness.py --self-test",
+      "reason": "The offline controls for the third triggering eval, the only one that measures inter-skill competition rather than a per-skill yes/no. evals/ is not in the share pack. Its live half cannot run in either workflow -- it drives installed commands through a CLI on interactive auth -- so what is gated is the scoring and exit contract, which is where both of its defects lived: it shipped with no exit contract at all, and it scored an unrun probe as a correct one."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Local-CI runner can fail (negative controls)",
+      "command": "tools/ci/Invoke-LocalCI.SelfTest.ps1",
+      "reason": "Structurally impossible to mirror, not merely out of scope -- and this is the entry to read before proposing that the two workflows be reconciled. These are the negative controls for the runner that EXECUTES tools/ci/verify.yml by parsing it. Putting them inside that file would have the runner run its own tests as one of the steps under test, and the runner's central claim is a claim about the COMPLETENESS of the step list, which cannot be made from inside the list."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Every gate tools/ci/verify.yml declares runs here",
+      "command": "tools/ci/Invoke-LocalCI.ps1",
+      "reason": "The same self-recursion and the sharper case: this step IS the portable workflow being driven. Adding it to tools/ci/verify.yml would make the runner invoke itself once for every step it runs, without terminating. The hosted job exists precisely so the shipped runner is exercised end to end somewhere -- a runner nobody runs is the thing this repository keeps catching itself at -- and it deliberately re-runs gates another job already ran, because the claim being tested is not `these gates pass` but `the runner can drive the shipped workflow`."
+    },
+    {
+      "kind": "ci-only",
+      "workflow": "ci",
+      "label": "Skill citations resolve",
+      "command": "tools/Test-PracticeClaims.ps1 -DocRoot skills -Only Citations -GateDir practice-gate",
+      "reason": "Points check A at skills/, and skills/ is not in the share pack -- a recipient's tree has no such directory, so the mirrored step would resolve nothing and fail on every run. Hosted-only for scope, exactly like the other trees this kind covers. It exists because check A was only ever aimed at tools/, which is how a skill came to cite a workflow as the authority for the pattern that workflow had been rewritten to remove; all 34 skills were triaged on 2026-08-18 and the root now covers the tree."
+    }
+  ]
+}

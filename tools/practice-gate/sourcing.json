@@ -1,0 +1,58 @@
+{
+  "_comment": [
+    "Sections that deliberately cite nothing.",
+    "",
+    "claude-dev-practice/README.md promises: 'Every claim points at code in this repo, with the",
+    "path. If a document says a thing is enforced, you can go and read the enforcement -- and if you",
+    "cannot, that is a bug in the document.' Check A verifies that the citations which EXIST resolve.",
+    "It has nothing to say about a section containing none at all, and that is how an entirely",
+    "unsourced section shipped: second-longest in the document, zero paths, every check green.",
+    "",
+    "A section registered here is making the weaker claim honestly. Two rules:",
+    "  - 'reason' is required, and should explain why no path CAN be given, not why one wasn't.",
+    "  - the document should say so too. A limit recorded only in a registry is a limit the reader",
+    "    never sees; the point is that they can calibrate how much to trust the section.",
+    "",
+    "Scope is the prose documents that make the promise -- see the scope[] list below, which is",
+    "authoritative; do not restate its length here, because appending a document and forgetting the",
+    "sentence beside it is exactly how this comment went stale once already. README.md is a map and",
+    "VERIFIED-AGAINST.md is a registry with external sources, so neither is held to it."
+  ],
+  "scope": [
+    "tools/claude-dev-practice/CODING-WITH-CLAUDE-CODE.md",
+    "tools/claude-dev-practice/TESTING-DISCIPLINE.md",
+    "tools/claude-dev-practice/REVERSIBILITY.md",
+    "tools/claude-dev-practice/GIT-AND-REVIEW.md",
+    "tools/claude-dev-practice/ORCHESTRATION.md",
+    "tools/claude-practice-layer/CLAUDE-FRAGMENT.md",
+    "tools/claude-practice-layer/skills/*/SKILL.md",
+    "tools/claude-dev-practice/PRIOR-ART.md"
+  ],
+  "entries": [
+    {
+      "file": "tools/claude-dev-practice/CODING-WITH-CLAUDE-CODE.md",
+      "section": "5. Write it down where it will be read",
+      "reason": "Names the HOMES knowledge lives in -- the always-on file, a rules file behind a paths glob, a skill, auto-memory. Every one of them is host configuration outside any repository, and the gate excludes host paths by shape precisely because it cannot resolve them. There is no in-repo artefact to point at without inventing one."
+    },
+    {
+      "file": "tools/claude-dev-practice/CODING-WITH-CLAUDE-CODE.md",
+      "section": "6. The tool surface is an input, and it is the one that fails quietly",
+      "reason": "No MCP server lives in this repository, and naming an internal one would fail the redaction check -- correctly, since these documents are written to be readable outside the organisation. The section states this limit in its own text so a reader can weigh it, rather than leaving it recorded only here."
+    },
+    {
+      "file": "tools/claude-dev-practice/REVERSIBILITY.md",
+      "section": "1. The four-step shape",
+      "reason": "States the shape every mutating operation should take. It is a pattern, not an implementation; the sections that follow carry the implementations and their paths."
+    },
+    {
+      "file": "tools/claude-dev-practice/REVERSIBILITY.md",
+      "section": "3. Verify contents, never exit codes",
+      "reason": "Built entirely from external incidents -- tar over a junction, a secret scanner in a worktree. The commands are quoted so a reader can reproduce them; the failures happened to third-party tools, so there is no file here that embodies them."
+    },
+    {
+      "file": "tools/claude-dev-practice/REVERSIBILITY.md",
+      "section": "4. Know what is actually recoverable before you rely on it",
+      "reason": "A table of recovery properties per store -- git, a session checkpoint, a graph write, an untracked directory. These are properties of the stores themselves. The checkpoint row is sourced instead through VERIFIED-AGAINST.md, which pins it to a version and a date."
+    }
+  ]
+}

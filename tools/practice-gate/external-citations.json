@@ -1,0 +1,51 @@
+{
+  "_comment": [
+    "Citations that deliberately do NOT resolve inside this repository.",
+    "",
+    "The practice README promises that every claim points at code you can go and read. Two kinds of",
+    "citation cannot honour that literally: a file that lives on the host outside any repo, and an",
+    "illustrative path invented to make a sentence concrete. Both are legitimate; neither may be",
+    "silent. Registering one here is the act of saying which it is.",
+    "",
+    "'reason' is required by the gate. An escape hatch without a reason is a silencer.",
+    "",
+    "AND SO IS A STALE ONE. The gate now checks this registry in both directions, the way the",
+    "harness-pin sweep exclusions already were: an entry no document cites any more FAILS, and so",
+    "does an entry whose token has come to resolve inside the tree. The second is the quieter of",
+    "the two -- an exemption for something now present keeps working forever while skipping a",
+    "check that would have passed. Three entries were removed on 2026-08-16 when the check was",
+    "added: two nothing cited, and Invoke-LocalCI.ps1, which had landed here as tools/ci/."
+  ],
+  "entries": [
+    {
+      "token": "feat/foo",
+      "kind": "illustrative",
+      "root": "tools",
+      "reason": "An invented branch name, not a path. It appears in the worktree toolkit README to show that slug derivation is many-to-one: 'feat/foo' and 'feat-foo' both slug to the same directory, which is why rwt now refuses when -Branch resolves to a tree holding a different branch. The slash is the whole point of the example, so it cannot be reworded away."
+    },
+    {
+      "token": "/compact",
+      "kind": "harness-command",
+      "root": "tools",
+      "reason": "A slash command in the CLI, not a path. It is caught because the extractor keys on a leading slash, which is the right default -- an absolute path that does not resolve is a real finding, and narrowing the rule to exclude anything starting with '/' would cost more than this one registration. Cited while describing what survives compaction, where the command name is the subject of the sentence and cannot be reworded away."
+    },
+    {
+      "token": "@src/auth/login.ts",
+      "kind": "illustrative",
+      "root": "tools",
+      "reason": "Invented path in the example of loading a file directly rather than searching for it. Names a shape, not an artifact."
+    },
+    {
+      "token": "cache.py",
+      "kind": "illustrative",
+      "root": "tools",
+      "reason": "Part of the invented repository state the compliance experiment hands the model -- a file edited then partly reverted, so it imports both the old and new name. It reaches COMPLIANCE-TESTS.md only inside VERBATIM QUOTES of the model's own responses, which are the measurement's raw evidence and must not be reworded to satisfy a gate. The fixture is deliberately fictional: a real path would make the control's behaviour depend on a tree the control cannot see."
+    },
+    {
+      "token": "core/cache.py",
+      "kind": "illustrative",
+      "root": "tools",
+      "reason": "Part of the invented repository state the compliance experiment hands the model -- a file edited then partly reverted, so it imports both the old and new name. It reaches COMPLIANCE-TESTS.md only inside VERBATIM QUOTES of the model's own responses, which are the measurement's raw evidence and must not be reworded to satisfy a gate. The fixture is deliberately fictional: a real path would make the control's behaviour depend on a tree the control cannot see."
+    }
+  ]
+}

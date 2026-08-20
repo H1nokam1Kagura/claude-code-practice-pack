@@ -1,0 +1,43 @@
+{
+  "_comment": [
+    "Documents OUTSIDE tools/ whose negative claims are checkable by inversion.",
+    "",
+    "A planning or inventory document says things like 'X does not exist as a script' and 'Y has",
+    "never been packaged'. Those are gaps, and a gap is the one kind of claim that gets FIXED --",
+    "which makes the sentence recording it false, silently, by someone else's good work. It happened:",
+    "the share-pack plan led its gap list with 'the permission-replay validator does not exist as a",
+    "script' for as long as it took somebody to write one.",
+    "",
+    "A negative existence claim is testable the other way round. The gate cannot know whether a gap",
+    "is CLOSED; it can know whether the artifact the gap says is missing is now present. That is the",
+    "whole check, and it is enough -- a stale 'does not exist' beside a file that exists is exactly",
+    "the drift a reader cannot detect without going and looking.",
+    "",
+    "WHY THESE FILES ARE NOT UNDER THE MAIN GATE. PLAN-external-share-pack.md carries 25 hits",
+    "against the redaction patterns, and needs every one of them: section 3's job is enumerating the",
+    "identifier classes to strip, and section 2f names the assets that must never ship. A document",
+    "whose subject is the identifiers cannot be scanned for identifiers. It is scanned for the one",
+    "thing that IS checkable about it instead.",
+    "",
+    "Citation resolution is deliberately NOT applied here either -- a plan legitimately cites host",
+    "configuration and other repositories, and demanding they resolve would produce noise rather",
+    "than findings."
+  ],
+  "scope": [
+    "PLAN-external-share-pack.md",
+    "PLAN-build-compliance.md"
+  ],
+  "negative_claim_markers": [
+    "does not exist",
+    "do not exist",
+    "has never been",
+    "have never been",
+    "is not yet",
+    "are not yet",
+    "there is no ",
+    "never became a tool",
+    "is a plan, not a build",
+    "nothing states",
+    "no worked example"
+  ]
+}

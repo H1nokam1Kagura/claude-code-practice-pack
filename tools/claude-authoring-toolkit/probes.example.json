@@ -1,0 +1,90 @@
+{
+  "_comment": [
+    "Probes for the triggering eval, kept OUT of the script on purpose.",
+    "",
+    "The version this was extracted from had its probes as a literal inside the script -- 483 of",
+    "740 lines, and every one of them naming an internal identifier. The mechanism was portable;",
+    "the data was not, and nothing separated them. So the data lives here now, and the script is",
+    "the part you can hand to somebody else unchanged.",
+    "",
+    "THE NON-TRIGGERING PROBES ARE THE HARD HALF, AND THIS IS THE WHOLE LESSON OF THE FILE.",
+    "A skill almost never fires on the weather. It fires on its NEIGHBOUR -- the skill next to it",
+    "that describes adjacent work in the same vocabulary. Probing with easy negatives ('what is",
+    "the capital of France') reports an accuracy the skill has not earned, because it measures a",
+    "confusion nobody was going to make. Every non-triggering probe below is aimed at a sibling,",
+    "and the comment says which one. If you cannot name the neighbour a probe defends against,",
+    "that probe is decoration.",
+    "",
+    "Four and four is the convention, not a rule the script enforces: enough that one miss is",
+    "visible against a threshold, few enough that a full run stays affordable. Vary the phrasing",
+    "-- four rewordings of one sentence measure one thing four times.",
+    "",
+    "'exempt' is an allow-list of skills deliberately not probed, each with the reason. Keep it",
+    "SMALL and specific. It is the one place a coverage gate can be silenced, so an entry without",
+    "a reason is a silencer rather than a decision -- the script rejects one."
+  ],
+
+  "exempt": {},
+
+  "probes": {
+    "incident-triage": {
+      "triggering": [
+        "The checkout alert just fired. Is this a sev1?",
+        "Latency is climbing and I don't know if I should page anyone.",
+        "Something is wrong in production right now -- help me work out how bad.",
+        "Triage this: error rate up, no deploy in the last day."
+      ],
+      "non_triggering": [
+        "We resolved it an hour ago. Help me draft the postmortem.",
+        "Write down the steps for failing over the database next time.",
+        "Explain what a service level objective is.",
+        "Refactor this retry loop to use exponential backoff."
+      ],
+      "_neighbours": [
+        "1 -> incident-writeup: same incident, but it is over. Tense is the only tell.",
+        "2 -> runbook-author: same subject matter, but the audience is a future reader.",
+        "3, 4 -> ordinary work, to keep one easy negative in the set as a floor."
+      ]
+    },
+
+    "incident-writeup": {
+      "triggering": [
+        "The incident is closed. Write up what happened.",
+        "Draft the post-incident review from this timeline.",
+        "What should the writeup say about the cause?",
+        "Turn these notes from yesterday's outage into a review document."
+      ],
+      "non_triggering": [
+        "The alert is firing now -- how bad is this and who do I wake?",
+        "Document the failover procedure so the next person can follow it.",
+        "Summarise this design document for the team.",
+        "Why is this query slow?"
+      ],
+      "_neighbours": [
+        "1 -> incident-triage: same incident, still live.",
+        "2 -> runbook-author: 'document' is the shared trigger word, and the likeliest collision.",
+        "3 -> a generic summarisation request, which any writing skill will over-claim."
+      ]
+    },
+
+    "runbook-author": {
+      "triggering": [
+        "Write a runbook for rotating the signing keys.",
+        "Turn this procedure into something the on-call can follow at 3am.",
+        "Update the runbook -- the second step doesn't work any more.",
+        "What steps and checks should the deploy procedure have?"
+      ],
+      "non_triggering": [
+        "Write up the outage we had on Tuesday.",
+        "The pager just went off. What is the next action?",
+        "Review this pull request for correctness.",
+        "Explain how our deploy pipeline works."
+      ],
+      "_neighbours": [
+        "1 -> incident-writeup: both produce a document about an operational event.",
+        "2 -> incident-triage: live, not documentation.",
+        "4 -> explanation, not procedure. The nearest thing to a false positive in normal use."
+      ]
+    }
+  }
+}

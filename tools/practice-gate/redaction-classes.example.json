@@ -1,0 +1,101 @@
+{
+  "_comment": [
+    "The redaction check's pattern table -- the GENERIC STARTER, and the one that ships. Read by",
+    "Test-PracticeClaims.ps1 check C when redaction-classes.json is not present beside it.",
+    "",
+    "THIS FILE EXISTS BECAUSE THE REAL TABLE CANNOT SHIP. The patterns a redaction gate holds ARE the",
+    "strings it forbids, so a populated table is a single-screen list of every internal identifier its",
+    "author could think of -- deduplicated, and captioned with why each one matters. That is a useful",
+    "artifact inside an organisation and a reconnaissance map outside one, and there is no middle",
+    "setting available: a pattern blurred enough to be safe to publish stops matching, and a class",
+    "that has stopped matching reports exactly what a clean tree reports. So the populated table is",
+    "held back from the distribution, and this one ships in its place.",
+    "",
+    "NOTHING BELOW IS REAL. Every name here is fictional -- example-corp, acme_warehouse,",
+    "internal.example.invalid, REC-482913 -- and none of it will match anything in your tree. That is",
+    "the shape working as intended, not a defect in it: what ships is the SCHEMA and the reasoning,",
+    "and the vocabulary is yours to write.",
+    "",
+    "TO STAND THE GATE UP: copy this file to redaction-classes.json beside it, replace every pattern",
+    "with your own organisation's identifiers, and then make sure redaction-classes.json is excluded",
+    "from whatever YOU distribute -- it will be a reconnaissance map of your estate for exactly the",
+    "same reason. The gate prefers redaction-classes.json and falls back to this file, so until you",
+    "write one, every run says in its note that it scanned with placeholder patterns.",
+    "",
+    "NEITHER TABLE IS SCANNED BY THE CHECK IT FEEDS, and both file names sit in the gate's own",
+    "self-exemption list for the reason the gate itself does: a class table holds every string it",
+    "forbids, so scanning it reports the table rather than the tree. Copy this file to",
+    "redaction-classes.json and the exemption comes along with the name. Call it something else and",
+    "the gate will not find it at all -- there is no search, only those two names in that order.",
+    "",
+    "AND THAT NOTE IS NOT A FORMALITY. A run against this table forbids example-corp and",
+    "acme_warehouse and nothing else. It exercises the plumbing -- the file loads, the classes parse,",
+    "every example still matches its own pattern, the scan walks the tree, the report prints -- and it",
+    "certifies nothing whatever about your identifiers. Do not read a green Redaction line under these",
+    "patterns as evidence of a clean tree; that is the one misreading this file is written to prevent.",
+    "",
+    "REQUIRED KEYS, and what each is for:",
+    "  name             Appears verbatim in every finding. Write it as the thing being protected, not",
+    "                   as a regex nickname -- the reader of a finding has to know what they hit.",
+    "  pattern          A .NET regex. CASE-SENSITIVE unless you write (?i): the scan uses",
+    "                   [regex]::Match, and so do the controls, deliberately and for the same reason.",
+    "  example          A string the pattern MUST match, checked on EVERY run rather than only in a",
+    "                   self-test. A pattern that has stopped matching produces no findings, and no",
+    "                   findings is what a clean tree produces too. This one key is what stands",
+    "                   between a broken class and a gate that silently forbids nothing.",
+    "  counter_example  Optional, and worth writing wherever the class runs close to legitimate prose:",
+    "                   the near-miss the tree is ALLOWED to carry, asserted NOT to match. A class too",
+    "                   broad fails a clean tree, which teaches people to route around the gate.",
+    "  reason           Required. What the class protects against. A class without one is somebody's",
+    "                   half-remembered worry, and the next reader cannot tell whether to widen it,",
+    "                   narrow it, or strike it.",
+    "",
+    "THE GATE THROWS RATHER THAN PASSING if neither this file nor redaction-classes.json is present,",
+    "or if the table it does load holds no classes. A check that found no patterns has forbidden",
+    "nothing, and it must never report PASS."
+  ],
+  "classes": [
+    {
+      "name": "personal path or identity",
+      "pattern": "(?i)(jdoe|jane\\.doe|[\\\\/]Users[\\\\/][a-z]+[\\\\/]\\.scratch\\b)",
+      "example": "C:\\Users\\jdoe\\.scratch\\thing.ps1",
+      "counter_example": "C:\\Users\\<you>\\.config\\settings.json",
+      "reason": "Named individuals, and the per-account directory convention your scripts assume. Put your own account names and login shapes here. A host path names a person and a machine layout, not just a file, and it is the identifier authors paste most often without noticing. The counter-example is the placeholder form documentation is supposed to use instead: if the class fires on that, it is too broad to live with."
+    },
+    {
+      "name": "organisation",
+      "pattern": "(?i)(example-corp|@example-corp\\.invalid|\\bECORP\\b|\\bWidget Guild\\b)",
+      "example": "ask in the Widget Guild channel",
+      "counter_example": "a widget factory and a guild of stonemasons",
+      "reason": "Your employer's name, its mail domain, its internal abbreviations, and its internal community or channel names. The community names are the ones that get missed: they read as warmth rather than as identifiers, yet they tell a recipient which organisation a bundle came from and point them at a forum they cannot join. Write those in explicitly -- a class that matches only the full legal name will pass a document that names three internal channels."
+    },
+    {
+      "name": "organisation written out",
+      "pattern": "(?i)(Example\\s+Corporation|\\bExample\\s+Corp\\b)",
+      "example": "Copyright 2026 Example Corporation",
+      "counter_example": "an example of corporate structure",
+      "reason": "Your organisation's name written out with spaces, as a separate class from the closed-up and abbreviated forms. Write BOTH: a class matching only 'examplecorp' or an internal abbreviation will pass a LICENSE or NOTICE naming 'Example Corporation' in full, which is the one place a legal attribution line is guaranteed to spell it out. That gap was real and measured in the tree this table came from."
+    },
+    {
+      "name": "infrastructure",
+      "pattern": "(?i)(wh-\\d+\\.\\d+\\.warehouse\\.example\\.invalid|acme_warehouse|acme_ledger|acme_staging|graph_dev_01|db:90\\d\\d)",
+      "example": "wh-000000000000000.0.warehouse.example.invalid",
+      "counter_example": "psql --host <host> --port 5432",
+      "reason": "Hostnames, catalog/schema/database names, instance identifiers, and the internal port conventions your local services listen on -- the names your queries are actually written against. Each one says which account and which data estate a repository belongs to, and schema names are directly actionable for anyone who can already reach the estate. Prefer shape-accurate examples with zeroed digits, as here, over live values: the pattern matches any digits, so a real identifier adds nothing to the control and costs you one more identifier in a file you now have to keep back."
+    },
+    {
+      "name": "record or taxonomy noun",
+      "pattern": "(REC-\\d+|\\bGRP\\d{1,2}\\b|WidgetAsset|WidgetConcept|\\bFlagship Programme\\b)",
+      "example": "REC-482913 maps to a WidgetAsset",
+      "counter_example": "a recovery plan for the flagship programme",
+      "reason": "Internal record-ID formats and the taxonomy nouns your domain work is written in. They leak the shape of a portfolio even where no single value is sensitive: a reader can tell how the work is partitioned and how it is numbered. Leave this class CASE-SENSITIVE -- no (?i) -- wherever its lowercase spellings are ordinary English, or it will fire on prose instead of on identifiers. Note that the counter-example here differs from the example's last alternative only in case, which is exactly why the controls use [regex]::IsMatch rather than PowerShell's case-insensitive -match: written the easy way, this control would report the class healthy while the scan walked past every real hit."
+    },
+    {
+      "name": "internal document",
+      "pattern": "(?i)(docs\\.example\\.invalid|intranet\\.example\\.invalid/sites|file:///z!|intra:///)",
+      "example": "https://docs.example.invalid/sites/team/Shared%20Documents/x.docx",
+      "counter_example": "file:///C:/temp/report.html",
+      "reason": "Document-host URLs, site-collection paths, and the URI schemes your desktop clients mint for a file held inside the tenant. Each is a working handle on an internal library rather than a mere mention of one, and the odd schemes are the forms an author pastes without registering that they are not ordinary links. The counter-example is an ordinary local file URL, which must keep shipping."
+    }
+  ]
+}

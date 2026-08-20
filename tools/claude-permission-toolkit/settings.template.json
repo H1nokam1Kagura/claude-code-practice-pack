@@ -1,0 +1,125 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -fr /)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf ~/)",
+      "Bash(rm -rf $HOME)",
+      "Bash(rm -rf $HOME/)",
+      "Bash(rm -rf /c)",
+      "Bash(rm -rf /c/)",
+      "Bash(rm -rf /c/Users)",
+      "Bash(rm -rf /c/Users/*)",
+      "Bash(rm -rf /mnt/c)",
+      "Bash(rm -rf /mnt/c/Users/*)",
+      "Bash(rm -rf C:/)",
+      "Bash(rm -rf C:/Users)",
+      "Bash(rm -rf C:/Users/*)",
+      "PowerShell(Remove-Item -Recurse -Force C:/)",
+      "PowerShell(Remove-Item -Recurse -Force C:/Users/*)",
+      "PowerShell(Remove-Item -Recurse -Force $env:USERPROFILE)",
+
+      "Bash(git push --force)",
+      "Bash(git push --force *)",
+      "Bash(git push -f)",
+      "Bash(git push -f *)",
+      "PowerShell(git push --force)",
+      "PowerShell(git push --force *)",
+      "PowerShell(git push -f)",
+      "PowerShell(git push -f *)",
+
+      "Bash(chmod -R 777 *)",
+      "Bash(chmod 777 *)",
+
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(**/.env.prod)",
+      "Read(**/.env.production)",
+      "Read(**/.env.secret)",
+      "Read(**/secrets/**)",
+      "Read(**/*secrets.json)",
+      "Read(**/*.secret)",
+      "Read(**/.ssh/**)",
+      "Read(**/id_rsa*)",
+      "Read(**/*.pem)",
+      "Read(**/*.pfx)",
+
+      "Edit(**/.env)",
+      "Edit(**/.env.local)",
+      "Edit(**/.env.prod)",
+      "Edit(**/.env.production)",
+      "Edit(**/.env.secret)",
+      "Edit(**/secrets/**)",
+      "Edit(**/*secrets.json)",
+      "Edit(**/*.secret)",
+      "Edit(**/.ssh/**)",
+      "Edit(**/id_rsa*)",
+      "Edit(**/*.pem)",
+      "Edit(**/*.pfx)",
+
+      "Bash(cat *.env)",
+      "Bash(cat *.env.local)",
+      "Bash(cat *.env.prod)",
+      "Bash(cat *.env.production)",
+      "Bash(cat *id_rsa*)",
+      "Bash(cat *.pem)",
+      "Bash(cat *.pfx)",
+      "Bash(type *.env)",
+      "Bash(head *.env)",
+      "Bash(tail *.env)",
+      "Bash(grep * .env)",
+      "PowerShell(Get-Content *.env)",
+      "PowerShell(Get-Content *.env.local)",
+      "PowerShell(Get-Content *.env.prod)",
+      "PowerShell(Get-Content *.env.production)",
+      "PowerShell(Get-Content *id_rsa*)",
+      "PowerShell(Get-Content *.pem)",
+      "PowerShell(cat *.env)",
+      "PowerShell(gc *.env)"
+    ],
+
+    "ask": [
+      "Bash(git push*)",
+      "PowerShell(git push*)",
+      "Bash(gh pr merge*)",
+      "PowerShell(gh pr merge*)",
+      "Bash(gh release create*)",
+      "PowerShell(gh release create*)",
+      "Bash(git worktree remove *)",
+      "PowerShell(git worktree remove *)",
+      "Bash(git branch -D *)",
+      "PowerShell(git branch -D *)",
+      "Bash(docker rm *)",
+      "Bash(docker rm -f *)",
+      "Bash(docker stop *)",
+      "Bash(docker volume rm *)",
+      "PowerShell(docker rm *)",
+      "PowerShell(docker rm -f *)",
+      "PowerShell(docker stop *)",
+      "PowerShell(docker volume rm *)",
+      "Bash(schtasks *)",
+      "PowerShell(schtasks *)",
+      "PowerShell(Register-ScheduledTask *)",
+      "Bash(winget install *)",
+      "PowerShell(winget install *)"
+    ],
+
+    "allow": []
+  },
+
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File <<HOOKS_DIR>>/secret-guard.ps1",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

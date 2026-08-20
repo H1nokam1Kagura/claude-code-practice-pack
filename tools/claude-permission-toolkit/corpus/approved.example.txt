@@ -1,0 +1,73 @@
+# Ordinary developer traffic. Replayed against settings.template.json, NOTHING here may be DENIED.
+#
+# This is the over-reach half of the template's acceptance test. It cannot, on its own, tell a good
+# floor from an empty one -- a floor that denies nothing passes it perfectly. That is why it is
+# paired with the must-deny set in test_template_floor.py; neither half means much without the
+# other. Replay the two together or not at all.
+#
+# Most entries land UNMATCHED rather than ALLOW, because the template ships an empty `allow` on
+# purpose. UNMATCHED is not a regression: it means the recipient will be prompted, which is the
+# correct default for traffic nobody has approved yet. Only DENY is a regression.
+#
+# Bring your own corpus too. An accumulated settings.local.json is the best one available -- every
+# literal in it is a command that actually ran and was actually approved.
+#
+#     python replay_permissions.py --candidate settings.template.json --corpus corpus/approved.example.txt
+
+# -- version control -----------------------------------------------------------------------------
+Bash(git status)
+Bash(git diff --staged)
+Bash(git log --oneline -n 20)
+Bash(git add -A && git commit -m "wip")
+Bash(git checkout -b feature/parser)
+Bash(git rebase main)
+Bash(git worktree add ../scratch -b scratch)
+PowerShell(git status)
+# The SAFE force-push form. It must survive the floor; `git push --force*` would swallow it.
+Bash(git push --force-with-lease origin feature/parser)
+
+# -- build and test ------------------------------------------------------------------------------
+Bash(npm ci)
+Bash(npm ci && npm test)
+Bash(npm run build)
+Bash(python -m pytest -q)
+Bash(python -m venv .venv)
+Bash(pip install -r requirements.txt)
+Bash(go test ./...)
+Bash(cargo build --release)
+Bash(make -j4)
+PowerShell(pwsh -NoProfile -File scripts/build.ps1)
+
+# -- filesystem and inspection -------------------------------------------------------------------
+Bash(ls -la)
+Bash(mkdir -p dist/assets)
+Bash(cp -r dist/ /tmp/stage/)
+Bash(tar -czf dist.tar.gz dist/)
+Bash(grep -rn "TODO" src/)
+Bash(chmod +x scripts/deploy.sh)
+PowerShell(Get-ChildItem -Recurse -File src)
+PowerShell(Test-Path dist/index.html)
+# An ordinary scratch delete. Under Git Bash every absolute path begins with '/', which is why the
+# floor spells the root deletes out exactly instead of reaching for `rm -rf /*`.
+Bash(rm -rf ./build)
+Bash(rm -rf /tmp/scratch/build)
+
+# -- containers and network ----------------------------------------------------------------------
+Bash(docker build -t app:dev .)
+Bash(docker ps)
+Bash(docker compose up -d)
+Bash(curl -sS https://example.com/health)
+
+# -- file tools (a different rule namespace from the shell ones) ----------------------------------
+Read(README.md)
+Read(src/main.py)
+Read(config/settings.yaml)
+Read(docs/architecture/overview.md)
+# A template, not a secret. `Read(**/.env.*)` would block this one.
+Read(.env.example)
+# The guard itself. `Read(**/*secret*)` would block the thing that does the guarding.
+Read(hooks/secret-guard.ps1)
+Edit(src/parser/tokenize.py)
+Write(tests/test_parser.py)
+Glob(src/**/*.ts)
+Grep(src/api/handlers.go)

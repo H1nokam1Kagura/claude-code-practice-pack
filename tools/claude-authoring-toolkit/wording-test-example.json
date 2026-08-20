@@ -1,0 +1,72 @@
+{
+  "_comment": [
+    "The worked experiment for WORDING-TESTS.md, and a template for your own.",
+    "",
+    "THE FAILURE UNDER TEST is one this repository's own always-on instruction file already",
+    "forbids: a deliverable written for a reader who never saw the machinery should not name the",
+    "machinery. The rule exists, it is written down, and nothing measures whether any particular",
+    "phrasing of it works. That is the gap this experiment is pointed at.",
+    "",
+    "WHY A STRING COUNT AND NOT A JUDGE. The metric has to be reproducible by someone who does not",
+    "trust us, and it has to be independent of the thing being measured. Counting fixed strings is",
+    "both. A model scoring model output would put the measurement and the subject in the same",
+    "family, and the first thing a wording change would move is the judge.",
+    "",
+    "THE ARMS ARE THE POINT. 'control' is not a formality -- it is step one, and the runner refuses",
+    "to compare anything if the control never exhibits the failure. 'prohibition' and 'recipe' say",
+    "the same thing in the two forms an author actually chooses between: forbid the bad output, or",
+    "describe the good one. They are not equivalent and this is how you find out.",
+    "",
+    "The fixture is a real work log from this repository, kept deliberately dense with names."
+  ],
+
+  "_control_contamination_note": [
+    "THE TASK LINE IS BARE ON PURPOSE, and the first version of it was not.",
+    "",
+    "It originally read '...for a programme officer who funds this team and has never opened the",
+    "repository'. Measured 2026-08-17: the control scored zero on every one of seven reps, and the",
+    "runner refused to go further. That audience clause IS the instruction under test, phrased as",
+    "task framing, so the control arm already carried the guidance the other arms were supposed to",
+    "add -- and every arm would have tied at the floor while looking like agreement.",
+    "",
+    "This is the failure mode the control-first rule exists to catch, and it caught its own",
+    "experiment before it caught anything else. If you copy this file, read your task line for",
+    "instructions hiding as context."
+  ],
+
+  "template": "&lt;work-log&gt;\n{fixture}\n&lt;/work-log&gt;\n\nSummarise the work above in exactly three sentences. {guidance}\n\nOutput only the three sentences.",
+
+  "fixture": "Added Test-ScriptQuality.ps1, a five-check gate over every .ps1 the pack ships, with its registry at practice-gate/script-quality.json. Wired a pinned PSScriptAnalyzer 1.25.0 install plus the gate into build-and-verify.yml, and the four module-free checks into the portable verify.yml so Invoke-LocalCI picks them up. Found that eight of ten scripts were UTF-8 with no BOM, that wt.ps1 uses null-coalescing without a #requires guard, and that five callers read a failed git status as clean. Ran the gate with -Analyzer and recorded 29 findings against the registry.",
+
+  "banned": [
+    "Test-ScriptQuality.ps1",
+    "PSScriptAnalyzer",
+    "script-quality.json",
+    "build-and-verify.yml",
+    "verify.yml",
+    "Invoke-LocalCI",
+    "wt.ps1",
+    "#requires",
+    "-Analyzer",
+    ".ps1",
+    "UTF-8",
+    "BOM",
+    "null-coalescing",
+    "git status"
+  ],
+
+  "arms": [
+    {
+      "name": "control",
+      "guidance": ""
+    },
+    {
+      "name": "prohibition",
+      "guidance": "Do not mention any tool, script, file, flag or product name."
+    },
+    {
+      "name": "recipe",
+      "guidance": "Refer to each step by what it achieved, in the words someone who has never seen the machinery would use."
+    }
+  ]
+}

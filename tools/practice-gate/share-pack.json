@@ -1,0 +1,143 @@
+{
+  "_comment": [
+    "The share-pack gate's registry -- read by Test-SharePackClean.ps1, which is the section 3 gate",
+    "and is a CALLER of Test-PracticeClaims.ps1 rather than a second copy of its redaction list.",
+    "",
+    "Four lists, and none of them is a list of things to ignore. Each entry records a decision, and",
+    "every one is checked in BOTH directions: an entry that no longer corresponds to anything is a",
+    "finding, exactly like a stale citation exemption next door. The quiet failure this prevents is",
+    "an exemption outliving its cause -- it keeps working forever while covering nothing, and it",
+    "looks identical to an exemption that is still load-bearing.",
+    "",
+    "bundle_boundary -- a bundle is not the repository. The gate stages the pack into a temp tree",
+    "with no .git, no .github and no skills/, which is the shape a recipient receives, and runs the",
+    "called gate there. Two classes of finding are then structural rather than defects: a check that",
+    "cannot apply to a distribution at all, and a citation that resolves in the repository and",
+    "dangles in the bundle. Both are registered here with the reason, and both fail as stale the day",
+    "they stop appearing. The citation entries are keyed on document plus token and deliberately NOT",
+    "on a line number -- a line number rots on the next edit to the paragraph above it, which is why",
+    "the plan deleted its line counts rather than updating them.",
+    "",
+    "unscanned -- the redaction check is extension-scoped, so a file whose extension is not in its",
+    "list ships unexamined and reports exactly like a clean one. An entry here says why that file",
+    "cannot be read. Prefer widening the gate's extension list over adding an entry: the first entry",
+    "this registry would have needed was CLAUDE.md.template, and the right answer was that a",
+    "template is a document, so .template joined the scan on 2026-08-17 and the list stayed empty.",
+    "",
+    "root_file_allowed -- occurrences of an organisation identifier in a PACK-ROOT file that are",
+    "legally required, and therefore may stay. IT IS EMPTY, AND THAT IS THE POINT OF HAVING IT.",
+    "",
+    "The pack root is the layer beside the content tree, enumerated from the manifest rather than listed here. It had",
+    "no check at all until 2026-08-19, for two reasons that each read as a clean result: the file",
+    "list every other check in the gate uses is the manifest's entries under the content prefix with",
+    "the prefix stripped, so a root file is filtered out by not carrying it; and both licence files",
+    "are extensionless, so they are outside the redaction scan's extension list independently. Four",
+    "organisation-identifying lines rode through every green gate run for the life of the branch and",
+    "were found by a hand grep. So the root files are now scanned, with the SAME classes the content",
+    "scan uses -- Test-SharePackClean.ps1 loads redaction-classes.json through the resolver the",
+    "delegated gate uses rather than keeping a second copy of the patterns.",
+    "",
+    "This list is empty because the files name no entity. The old exemption rested on 'a NOTICE file",
+    "has to name the copyright holder', and that is not what Apache-2.0 says: 4(c)/4(d) require the",
+    "notices that ARE in the work to travel with a redistribution, they require nobody to be named,",
+    "and 4(d) applies only if a NOTICE file exists at all. A NOTICE carrying the licence and the",
+    "product satisfies it. So the list exists for the day somebody makes the OTHER legitimate legal",
+    "decision -- putting a copyright holder back, which a distributor may well have to do -- and it",
+    "exists so that decision lands as a registered entry with a reason instead of as a silent pass.",
+    "",
+    "Entries are keyed on path plus the exact MATCHED TEXT, not on a line number: a line number rots",
+    "on the next edit to the paragraph above it, the same reason the citation entries above are keyed",
+    "on document plus token. Checked in both directions like everything else here -- an entry the",
+    "scan no longer finds fails as stale, because the quiet way this list rots is somebody rewording",
+    "the notice and leaving the allowance behind to permit something nobody is checking for.",
+    "",
+    "A MEASURED HOLE, recorded rather than left to the next hand grep. Of the four lines removed on",
+    "2026-08-19, the classes catch two -- a product name and a tenant URL -- and miss two, because",
+    "both are the organisation's name written out with spaces and the class matches the closed-up",
+    "form. The fix is one alternative in the 'organisation' class in redaction-classes.json. It is",
+    "NOT a pattern in the gate: a second organisation list in a second file is the drift that gate's",
+    "header opens by refusing.",
+    "",
+    "secret_fixtures -- files whose JOB is to contain credential-shaped strings: a probe corpus for",
+    "a secret guard, and the gates whose pattern tables are made of examples. Their exemption is",
+    "checked the hard way round: a fixture that no longer matches any secret class has stopped being",
+    "a fixture, and the entry fails rather than quietly covering a file nobody scans.",
+    "",
+    "THREE ENTRIES WERE STRUCK FROM THAT LIST ON 2026-08-17, ON ITS FIRST RUN, and the reason is",
+    "worth more than the entries were. secret-guard.ps1, secret_guard.py and test_secret_guard.py",
+    "were registered on the reasoning that a secret guard must be full of credential shapes. It is",
+    "not: what those files hold are credential-shaped REGEXES, and 'dapi[0-9a-f]{32}' looks nothing",
+    "like a token to a scanner. So the scan found nothing in any of the three, and the",
+    "reverse-direction check reported all three as exemptions covering nothing. A registry written",
+    "from reasoning, corrected by measurement -- which is the argument for checking an exemption list",
+    "in both directions instead of only when it fires.",
+    "",
+    "The gate itself was registered here too, briefly, on the reasoning that a file full of",
+    "credential-shaped examples needs an exemption. It does not: the examples are now assembled from",
+    "fragments at load time, so the run-time positive controls still match while nothing matchable",
+    "sits on disk. An assembled example beats a registered exemption every time -- an exemption is a",
+    "thing somebody has to keep true. Prompted by GitHub push protection, which blocked the gate's",
+    "first push over its own vendor-token example and was right to."
+  ],
+  "bundle_boundary": {
+    "checks": [
+      {
+        "check": "Assertions",
+        "statuses": [
+          "SKIPPED"
+        ],
+        "reason": "The negative-claim inversion re-reads the planning documents, and a distribution ships none of them -- its scope is the registry rather than the tree walk, which is the one check here that deliberately reaches outside tools/. The called gate already reports this as NOT RUN rather than as a pass; registering it means a bundle run is legible instead of red on structural grounds. If this check ever reports anything OTHER than SKIPPED against a bundle, that is a different deviation and is not covered by this entry."
+      }
+    ],
+    "citations": [
+      {
+        "document": "tools/claude-authoring-toolkit/README.md",
+        "token": ".github/scripts/lint_skills.py",
+        "reason": "The repository-side lint that the shipped schema is gated AGAINST. It is the other half of a parity comparison, so the sentence is about a file that is deliberately outside the pack; rewriting it to the shipped copy would make the paragraph describe a gate comparing a file with itself."
+      },
+      {
+        "document": "tools/claude-dev-practice/CODING-WITH-CLAUDE-CODE.md",
+        "token": "scan.py",
+        "reason": "Named bare, in the compliance narrative. It resolves in this repository under skills/build-compliance/scripts/ and lands in the pack at compliance/ under build order 9, so this entry is transitional: the assembly step rewrites the citation, and this check then fails as stale, which is the moment to strike it."
+      },
+      {
+        "document": "tools/claude-dev-practice/TESTING-DISCIPLINE.md",
+        "token": "freshness.py",
+        "reason": "Same as scan.py above -- a bare script name in the compliance narrative, resolving in this repository and lifted into compliance/ by the assembly step."
+      },
+      {
+        "document": "tools/claude-dev-practice/TESTING-DISCIPLINE.md",
+        "token": "skills/build-compliance/scripts/test_scan.py",
+        "reason": "Cited by its repository path, twice in this document, as the source of two tests the pack lifts verbatim. One entry covers both citations because the key is document plus token: the two mentions are the same claim about the same file, and keying on line numbers would have made this registry rot on any edit above them."
+      },
+      {
+        "document": "tools/claude-dev-practice/GIT-AND-REVIEW.md",
+        "token": "skills/build-compliance/scripts/scan.py",
+        "reason": "Cited by its repository path as the source of the degrade-to-SKIPPED pattern. Lifted into compliance/ by the assembly step, at which point the citation is rewritten and this entry fails as stale."
+      },
+      {
+        "document": "tools/claude-dev-practice/GIT-AND-REVIEW.md",
+        "token": "skills/eval-harness-domain/SKILL.md",
+        "reason": "One of the two eval-harness skills section 2g assesses. The pack ships a redacted copy of the domain one, but the sentence cites the SOURCE -- it is about where the anti-Goodhart primitive already lived, so it names a repository path on purpose."
+      },
+      {
+        "document": "tools/claude-dev-practice/GIT-AND-REVIEW.md",
+        "token": "skills/eval-harness-code/SKILL.md",
+        "reason": "The other one, and it is HOLD rather than a lift: 17 of its lines carry tenant references scattered file-wide. So this citation can never resolve inside a pack, and the entry is permanent rather than transitional."
+      },
+      {
+        "document": "tools/claude-dev-practice/ORCHESTRATION.md",
+        "token": "skills/eval-harness-domain/SKILL.external.md",
+        "reason": "The redacted external-share variant that ORCHESTRATION.md derives its role separation, auditor contract, cold scoring and dispatcher-control sections from. The pack ships no skills/ tree, so the citation resolves in the repository and dangles in a bundle -- the same shape as the GIT-AND-REVIEW.md and TESTING-DISCIPLINE.md entries above. Keyed on document plus token, so this one entry covers all seven citations of it rather than rotting on a line number. Permanent rather than transitional: the sentence cites the SOURCE the text was derived from, so rewriting it to a shipped path would make the paragraph claim a provenance it does not have."
+      }
+    ]
+  },
+  "unscanned": [],
+  "root_file_allowed": [],
+  "secret_fixtures": [
+    {
+      "path": "claude-permission-toolkit/guard-probes.json",
+      "reason": "The shared probe corpus for the two secret guards. Every probe is a command carrying a credential-shaped literal on purpose -- that is what the guards are asked to block -- so a secret scanner reads this file as a wall of leaks. Registered rather than narrowed: the alternative is patterns loose enough to miss the real thing."
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+# Verify -- a portable workflow over the shipped checks.
+#
+# Drop this in .github/workflows/ and it runs. It is also the file ci/Invoke-LocalCI.ps1 PARSES to
+# run the same job locally, which is why its shape is constrained:
+#
+#   * every `run:` is a SINGLE LINE, or a folded `>-` scalar. A `run: |` block is a multi-line
+#     shell body the local runner will not guess at -- it reaches the completeness check as an
+#     unaccounted step and fails the run rather than being half-executed.
+#   * every run step carries an explicit `shell: pwsh`. On windows-latest that is the house
+#     convention anyway, and it means the local runner routes by the shell the workflow DECLARES
+#     rather than by sniffing the command text, which is wrong in both directions.
+#
+# NO SECRETS, and no elevated permissions. Everything here is free and offline. The accuracy half
+# of the triggering eval needs an API key and is deliberately NOT in this job -- see the
+# --coverage-only step at the bottom.
+#
+# PATHS: written against this repository's layout (tools/claude-*-toolkit/, and this directory at
+# tools/ci/). The share pack lays the same files out one level up -- permissions/, authoring/,
+# memory/, worktrees/, ci/ -- so the lift is one rename, applied here and nowhere else, because
+# nothing else duplicates this list.
+#
+# This directory lives under tools/ rather than at the repository root ON PURPOSE: the practice
+# claim gate sweeps tools/, and its pin sweep is opt-OUT, so a document placed here is gated from
+# the moment it exists. At the root it would have been a shipped directory that no check reads --
+# which is the failure this whole file was written to close, recreated one level up.
+
+name: Verify
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Shipped checks
+    # windows-latest: the worktree suite and the pwsh half of the guard-parity gate both need
+    # pwsh and git. On ubuntu the guard gate reports NOT APPLICABLE and exits 2, which under the
+    # contract below is not a pass -- so the cheaper runner would buy a job that measures less and
+    # says so, rather than a job that passes.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install the one third-party dependency
+        shell: pwsh
+        run: python -m pip install PyYAML --quiet
+
+      # Every gate below is a PAIR: negative controls first, then the live run. A gate that has
+      # never been red is not evidence, so the live run is only allowed to mean something once the
+      # controls have proved the gate can fail.
+
+      - name: Practice gate can fail (negative controls)
+        shell: pwsh
+        run: ./tools/Test-PracticeClaims.ps1 -SelfTest
+
+      - name: Citations, figures, redaction, harness pins
+        shell: pwsh
+        run: ./tools/Test-PracticeClaims.ps1
+
+      # The share-pack gate CALLS the gate above rather than restating its redaction list, stages
+      # this tree as a distribution, and checks the four things a content scan cannot: that the
+      # called gate ran, that every deviation is a registered bundle boundary, that no file ships
+      # outside some scan, and that nothing on the never-ship list is present as a path.
+      #
+      # No -Gitleaks here, deliberately, and no install step to add one. This workflow is the
+      # PORTABLE one: a recipient has whatever scanner they have, and an install step would be both
+      # a multi-line body this file's own runner refuses to guess at and a step that exits 2 on a
+      # machine that never asked for it. So the built-in shape scan runs, and the report says on its
+      # face that it is a shape scan rather than a full one. Add -Gitleaks before you ship anything.
+      - name: Share-pack gate can fail (negative controls)
+        shell: pwsh
+        run: ./tools/Test-SharePackClean.ps1 -SelfTest
+
+      - name: Nothing in the pack may leave its organisation
+        shell: pwsh
+        run: ./tools/Test-SharePackClean.ps1
+
+      # Encoding, version guards, preamble and scope coverage over every .ps1 this pack ships.
+      #
+      # No -Analyzer here, for the same reason there is no -Gitleaks above: PSScriptAnalyzer is a
+      # gallery module a recipient may not have and may not be able to fetch, and an install step
+      # would be a multi-line body this file's own runner refuses to guess at. The four checks that
+      # need no module still run and still measure real properties; the fifth reports on its own
+      # face that no static analysis happened. Add -Analyzer wherever you control the runner.
+      - name: Script-quality gate can fail (negative controls)
+        shell: pwsh
+        run: ./tools/Test-ScriptQuality.ps1 -SelfTest
+
+      - name: The shipped PowerShell parses, is guarded, and is fully in scope
+        shell: pwsh
+        run: ./tools/Test-ScriptQuality.ps1
+
+      - name: Merged-ness gate can fail (negative controls)
+        shell: pwsh
+        run: ./tools/claude-worktree-toolkit/Test-WorktreeMergedness.ps1 -SelfTest
+
+      - name: Merged-ness gate behaves as documented
+        shell: pwsh
+        run: ./tools/claude-worktree-toolkit/Test-WorktreeMergedness.ps1
+
+      - name: Permission matcher behaves as documented
+        shell: pwsh
+        run: python tools/claude-permission-toolkit/test_replay.py
+
+      - name: Shipped floor lets work through and still catches what it exists for
+        shell: pwsh
+        run: python tools/claude-permission-toolkit/test_template_floor.py
+
+      - name: Secret guard behaves as documented
+        shell: pwsh
+        run: python tools/claude-permission-toolkit/test_secret_guard.py
+
+      - name: Guards are in parity
+        shell: pwsh
+        run: python tools/claude-permission-toolkit/check_guard_parity.py
+
+      # --harness names the second side explicitly. A distribution lays the compliance half out
+      # differently, and a gate that guessed would report "not applicable" on a tree that has it.
+      - name: Arbitrary-execution detectors are in parity
+        shell: pwsh
+        run: >-
+          python tools/claude-permission-toolkit/check_interpreter_parity.py
+          --harness skills/build-compliance/scripts/checks/harness.py
+
+      - name: Memory index rebuild never modifies a file it does not own
+        shell: pwsh
+        run: python tools/claude-memory-toolkit/tests/safety_test.py
+
+      - name: Pointer-file check can fail (negative controls)
+        shell: pwsh
+        run: python tools/claude-authoring-toolkit/check_pointer_file.py --self-test
+
+      - name: Frontmatter lint can fail (negative controls)
+        shell: pwsh
+        run: python tools/claude-authoring-toolkit/lint_skills.py --self-test
+
+      - name: Shipped example skills satisfy the shipped contract
+        shell: pwsh
+        run: python tools/claude-authoring-toolkit/lint_skills.py tools/claude-authoring-toolkit/examples/skills
+
+      - name: Lint-parity gate can fail (negative controls)
+        shell: pwsh
+        run: python tools/claude-authoring-toolkit/check_lint_parity.py --self-test
+
+      - name: Repo lint and shipped schema agree, or every difference is registered
+        shell: pwsh
+        run: >-
+          python tools/claude-authoring-toolkit/check_lint_parity.py
+          --repo-lint .github/scripts/lint_skills.py
+
+      # The gate on THIS FILE and the hosted workflow it is a portable copy of. Both are step
+      # lists, both are load-bearing, and until 2026-08-17 nothing compared them: 42 `run:` steps
+      # there against 22 here, 17 commands in common, and the only record of which differences were
+      # deliberate was a sentence in a handoff document that no check reads.
+      #
+      # It also asserts this file's own shape contract -- every `run:` step declares `shell: pwsh`,
+      # which is what lets Invoke-LocalCI.ps1 route by the shell the workflow DECLARES instead of
+      # sniffing the command text. Nothing checked that before. (The companion rule, no `run: |`
+      # block scalars, already has a control in Invoke-LocalCI.SelfTest.ps1 and is deliberately not
+      # duplicated.)
+      #
+      # WIRED INTO BOTH FILES IT GATES: these two steps and their twins in the hosted workflow move
+      # the counts the gate measures (22 -> 24 here). They are identical on both sides, so they are
+      # MIRRORED and need no registry entry -- said out loud because a gate that did not account
+      # for its own steps would be the blind spot it exists to close.
+      #
+      # On a tree with no .github/ -- which is what a distribution is -- this exits 2, the scope
+      # answer: the far side was never shipped, so there is nothing to compare. Partial cover, and
+      # the runner reports it as SKIPPED rather than as a pass.
+      - name: Workflow-parity gate can fail (negative controls)
+        shell: pwsh
+        run: python tools/ci/check_workflow_parity.py --self-test
+
+      - name: Every CI step is mirrored locally, or the difference is registered
+        shell: pwsh
+        run: python tools/ci/check_workflow_parity.py
+
+      # Self-test only, and this one cannot have a live half. The wording runner drives a model
+      # several times per arm; its verdict is a distribution, not a property, so a live run in CI
+      # would be a gate whose colour depends on a model's mood. What IS gated is its arithmetic --
+      # the scoring, the separation rule, and the refusal to compare anything when the control
+      # never exhibited the failure. See tools/claude-authoring-toolkit/WORDING-TESTS.md.
+      - name: Wording-test arithmetic behaves as documented (offline controls)
+        shell: pwsh
+        run: python tools/claude-authoring-toolkit/wording_test.py --self-test
+
+      # One property further in than the step above: that one measures whether a sentence moves
+      # behaviour, this one whether a rule is obeyed once the skill has fired. Live arms are a
+      # distribution, so only the arithmetic is gated -- including the branch that reports a rule
+      # as UNEARNED when the control never violated without it. See
+      # tools/claude-authoring-toolkit/COMPLIANCE-TESTS.md.
+      - name: Compliance-test arithmetic behaves as documented (offline controls)
+        shell: pwsh
+        run: python tools/claude-authoring-toolkit/compliance_test.py --self-test
+
+      # The multi-turn runner. Offline controls only, for the same reason: a survival curve is a
+      # distribution, not a property. See tools/claude-authoring-toolkit/COMPLIANCE-TESTS.md.
+      - name: Multi-turn ladder arithmetic behaves as documented (offline controls)
+        shell: pwsh
+        run: python tools/claude-authoring-toolkit/compliance_test_multiturn.py --self-test
+
+      - name: Triggering-eval coverage gate can fail (offline controls)
+        shell: pwsh
+        run: python tools/claude-authoring-toolkit/eval_skills.py --self-test
+
+      # --coverage-only, not a plain run. A plain run reaches the accuracy half, which needs
+      # ANTHROPIC_API_KEY and exits 2 without it -- correctly, since nothing was measured. This
+      # half is free and offline, and it prints on every run that no description was ever scored.
+      - name: Shipped example skills are fully probed
+        shell: pwsh
+        run: >-
+          python tools/claude-authoring-toolkit/eval_skills.py --coverage-only
+          tools/claude-authoring-toolkit/examples/skills
+          --probes tools/claude-authoring-toolkit/probes.example.json

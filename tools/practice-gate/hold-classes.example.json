@@ -1,0 +1,157 @@
+{
+  "_comment": [
+    "The share-pack gate's HOLD LIST -- the GENERIC STARTER, and the one that ships. Read by",
+    "Test-SharePackClean.ps1 check 4 and by Build-SharePack.ps1 when hold-classes.json is not present",
+    "beside it.",
+    "",
+    "WHAT A HOLD LIST IS FOR, and why it is not the redaction check. The redaction check reads file",
+    "CONTENTS and answers 'does this text carry an identifier'. This list answers a different",
+    "question -- 'may this asset leave at all' -- and it is a question about PATHS, because the",
+    "assets that answer 'no' are frequently clean. An accumulated permission corpus is real paths and",
+    "real command history and not one organisation name; a host-teardown script is process kills",
+    "tailored to one machine; an archive's whole problem is that no text check in the pack can read",
+    "inside it. None of those would ever be caught by reading their bytes for identifiers, and the",
+    "one class here that IS about a name is about a name in the PATH, which a content scan never",
+    "sees.",
+    "",
+    "THIS FILE EXISTS BECAUSE THE POPULATED TABLE CANNOT SHIP, and the argument is the redaction",
+    "table's argument arriving one check later. A populated hold list is a captioned inventory of",
+    "exactly the assets an organisation decided to withhold -- which is a map of what it has -- and a",
+    "path-shaped class has nowhere to put a name except the pattern and the worked example. So the",
+    "populated table is held back (by a class in itself: see the last two entries below, which are",
+    "the two class tables), and this one ships in its place.",
+    "",
+    "NOTHING BELOW IS REAL. orgname, tenant-bundle, domain-a, host-teardown.ps1 -- every specific",
+    "name here is fictional and none of it will match anything in your tree. That is the shape",
+    "working as intended: what ships is the SCHEMA and the reasoning, and the vocabulary is yours to",
+    "write. Four of the classes are NOT fictional and are worth keeping as they stand, because they",
+    "are properties of the tooling rather than of an organisation: the two settings files, the",
+    "generated memory index, the archive class and the compiled-residue class.",
+    "",
+    "TO STAND THE GATE UP: copy this file to hold-classes.json beside it, replace the fictional",
+    "patterns with your own withheld assets, and leave the last two entries alone -- they are what",
+    "keeps your populated tables out of what YOU distribute, for exactly the reason this paragraph",
+    "describes. The gate and the builder both prefer hold-classes.json and fall back to this file,",
+    "and both name the table they loaded in their report, so until you write one every run says out",
+    "loud that it was holding back placeholder paths.",
+    "",
+    "AND THAT NOTE IS NOT A FORMALITY. A run against this table withholds nothing you own. It",
+    "exercises the plumbing -- the file loads, the classes parse, every example still matches its own",
+    "pattern, every counter-example still does not, the walk applies them, the report prints -- and it",
+    "certifies nothing whatever about your withheld assets. Do not read a green HoldList line under",
+    "these patterns as evidence that nothing sensitive shipped.",
+    "",
+    "REQUIRED KEYS -- the same four the redaction table requires, deliberately, so there is one shape",
+    "to learn:",
+    "  name             Appears verbatim in every finding. Name the asset, not the regex.",
+    "  pattern          A .NET regex, matched against the PACK-RELATIVE path with forward slashes.",
+    "                   CASE-SENSITIVE unless you write (?i).",
+    "  example          A path the pattern MUST match, checked on EVERY run rather than only in a",
+    "                   self-test. A pattern that has stopped matching withholds nothing, reports",
+    "                   nothing, and looks exactly like a pack with nothing to withhold. This one key",
+    "                   is what stands between a broken class and a gate that silently permits",
+    "                   everything.",
+    "  counter_example  Optional, and worth writing wherever the class runs close to something the",
+    "                   pack legitimately ships: the near-miss, asserted NOT to match. A class too",
+    "                   broad withholds a file the recipient needed, which is how people learn to",
+    "                   route around the gate.",
+    "  reason           Required. Why this must not leave.",
+    "",
+    "THE GATE AND THE BUILDER BOTH THROW rather than passing if neither this file nor",
+    "hold-classes.json is present, or if the table they do load holds no classes. A hold list that",
+    "failed to load permits everything, and it must never report PASS."
+  ],
+  "classes": [
+    {
+      "name": "accumulated permission corpus",
+      "pattern": "(?i)(^|/)settings\\.local\\.json$",
+      "example": "permissions/settings.local.json",
+      "counter_example": "permissions/settings.template.json",
+      "reason": "The rule corpus a real host accumulates: real paths, real hostnames, real command history. Its aggregate statistics are the shareable part and the file is not. Keep this class as it stands -- the filename is the tool's, not yours."
+    },
+    {
+      "name": "live host settings",
+      "pattern": "(?i)(^|/)settings\\.json$",
+      "example": "permissions/settings.json",
+      "counter_example": "permissions/settings.template.json",
+      "reason": "A live settings file carries endpoints, and frequently a credential, under its server configuration. Ship the floor-only template instead. The counter-example is that template, one word away from the held name -- which is the reason this pattern is anchored on the full filename."
+    },
+    {
+      "name": "generated memory index",
+      "pattern": "(?i)(^|/)MEMORY(-spokes)?\\.md$",
+      "example": "memory/MEMORY.md",
+      "counter_example": "memory/claude-memory-toolkit/MEMORY-SCHEMA.md",
+      "reason": "A generated index is a table of contents for whatever the author has been working on. The toolkit that generates one ships; a generated one does not."
+    },
+    {
+      "name": "pinned internal policy source",
+      "pattern": "(?i)(^|/)(source-map\\.json|control-catalog\\.md)$",
+      "example": "compliance/references/source-map.json",
+      "counter_example": "compliance/source-map.SCHEMA.json",
+      "reason": "Fictional as written -- rename these to whatever your compliance layer pins. The genre is a file holding document-host identifiers, internal contacts and pinned control text; ship the schema and the empty headings, never the data."
+    },
+    {
+      "name": "host-specific automation",
+      "pattern": "(?i)(^|/)(host-teardown\\.ps1|host-reap[^/]*\\.ps1)$",
+      "example": "session/host-teardown.ps1",
+      "counter_example": "worktrees/claude-worktree-toolkit/wt.ps1",
+      "reason": "Fictional names. The genre is a script that kills processes or force-merges branches on one specific machine: correct there, destructive anywhere else, and impossible for a recipient to review against a host they cannot see."
+    },
+    {
+      "name": "front door to withheld machinery",
+      "pattern": "(?i)(^|/)(park|unpark|teardown)\\.md$",
+      "example": "commands/park.md",
+      "counter_example": "session/HANDOFF-PRACTICE.md",
+      "reason": "Fictional names. Whatever you withhold above, withhold its documented entry point too: shipping the front door to something deliberately absent is worse than shipping neither, because it reads as a defect in the pack rather than as a decision."
+    },
+    {
+      "name": "domain deliverable",
+      "pattern": "(?i)(^|/)(domain-a|domain-b|programme-[^/]*)/",
+      "example": "skills/domain-a/SKILL.md",
+      "counter_example": "authoring/examples/skills/example-formatter/SKILL.md",
+      "reason": "Fictional directory names. The genre is subject-matter work that happens to live in the same tree as the practice toolkits: out of scope for a coding-practice pack, and usually confidential besides. The counter-example is a teaching example that must keep shipping."
+    },
+    {
+      "name": "tenant distribution route",
+      "pattern": "(?i)(^|/)tenant-bundle/",
+      "example": "tenant-bundle/plugins/x/SKILL.md",
+      "counter_example": "ci/README.md",
+      "reason": "Fictional. The genre is a directory whose layout is dictated by one deployment target: it names the deployment, and everything under it reaches a place the recipient cannot."
+    },
+    {
+      "name": "name carrying the organisation",
+      "pattern": "(?i)(^|/)orgname[-_]",
+      "example": "session/statusline/orgname-claude-statusline.zip",
+      "counter_example": "session/statusline/claude-statusline.ps1",
+      "reason": "Replace 'orgname' with your own prefix. Assets that ship renamed off an organisation prefix need a class that catches the un-renamed form, and a redaction check reads file CONTENTS and would never see a name that only exists in the path."
+    },
+    {
+      "name": "opaque archive",
+      "pattern": "(?i)\\.(zip|7z|tar|tgz|tar\\.gz|rar)$",
+      "example": "session/statusline/statusline.zip",
+      "counter_example": "session/statusline/install.ps1",
+      "reason": "No text check in a pack like this can read inside an archive, so shipping one exempts its contents from every gate at once. Ship the unpacked files. Keep this class as it stands."
+    },
+    {
+      "name": "build residue",
+      "pattern": "(?i)((^|/)__pycache__/|\\.pyc$)",
+      "example": "permissions/__pycache__/replay_permissions.cpython-312.pyc",
+      "counter_example": "permissions/replay_permissions.py",
+      "reason": "Compiled residue: unreadable by every text check, and useless to a recipient. The builder's non-content exclusion normally drops it before this list is consulted, so a hit here means it arrived by some other route. Keep this class as it stands."
+    },
+    {
+      "name": "real redaction class table",
+      "pattern": "(?i)(^|/)redaction-classes\\.json$",
+      "example": "practice-gate/redaction-classes.json",
+      "counter_example": "practice-gate/redaction-classes.example.json",
+      "reason": "KEEP THIS CLASS. Once you write your own redaction-classes.json it becomes a captioned list of every identifier you know about, which is why it was put in a data file in the first place -- so that it could be withheld. The .example table beside it is the generic starter and MUST keep shipping; the two names are one word apart and carry opposite verdicts, which is what the counter-example holds."
+    },
+    {
+      "name": "real hold class table",
+      "pattern": "(?i)(^|/)hold-classes\\.json$",
+      "example": "practice-gate/hold-classes.json",
+      "counter_example": "practice-gate/hold-classes.example.json",
+      "reason": "KEEP THIS CLASS. Once you write your own hold-classes.json it becomes a captioned inventory of the assets you decided to withhold, which is a map of what you have. It is also the one asset on the list whose absence nobody would notice, so a hold list that does not hold itself back is a hold list that eventually ships."
+    }
+  ]
+}

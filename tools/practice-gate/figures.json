@@ -1,0 +1,41 @@
+{
+  "_comment": [
+    "Measurement-shaped figures that carry no ISO date in their own paragraph.",
+    "",
+    "The preferred fix is always to date the figure inline — '_measured 2026-08-10_' beside the",
+    "number, where a reader sees it. This registry is for the cases where an inline date would be",
+    "wrong: a figure quoted as an illustration rather than as evidence, or one whose date belongs to",
+    "a source outside this repository.",
+    "",
+    "'kind' and 'reason' are required. kind=measurement additionally requires an ISO 'measured'",
+    "date, because that is what makes it evidence. kind=illustration does not, because demanding a",
+    "date for an anecdote only produces a fabricated one -- which is the failure this check exists",
+    "to catch, moved somewhere less visible."
+  ],
+  "entries": [
+    {
+      "file": "tools/claude-dev-practice/CODING-WITH-CLAUDE-CODE.md",
+      "figure": "100×",
+      "kind": "illustration",
+      "reason": "An anecdote motivating the rule that a current count belongs nowhere -- 'on one stack a memorised multiplier moved by more than 100x inside a quarter'. It is not offered as evidence and has no single measurement date; the source is an un-versioned host config file, so no date can be recovered honestly."
+    },
+    {
+      "file": "tools/claude-dev-practice/TESTING-DISCIPLINE.md",
+      "figure": "28 tests",
+      "kind": "illustration",
+      "reason": "Quoted as the example of a stale docs claim ('a README claiming 28 tests against a suite of 29'). Dating it would suggest the figure is being asserted rather than criticised."
+    },
+    {
+      "file": "tools/claude-memory-toolkit/README.md",
+      "figure": "100%",
+      "kind": "illustration",
+      "reason": "Two occurrences: a qualitative rate ('~100% false-positive') and a reliability column in a mechanism-comparison table. Neither is a count taken on a day."
+    },
+    {
+      "file": "tools/claude-worktree-toolkit/README.md",
+      "figure": "25,000",
+      "kind": "illustration",
+      "reason": "Arithmetic on two constants in the same sentence -- 182 animals x 141 adjectives. Derived, not measured; it changes only when the word lists change."
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "_comment": [
+    "The frontmatter contract, in the form a script can read.",
+    "",
+    "It is deliberately SEPARATE from SKILL-FRONTMATTER.md, and the two are gated against each",
+    "other by lint_skills.py --self-test: every governance field named in the prose table must",
+    "appear in 'fields' here, and vice versa. A schema documented in one place and enforced in",
+    "another is two schemas that agree until the day somebody edits one of them.",
+    "",
+    "EVERY GOVERNANCE FIELD LIVES UNDER 'metadata'. That is not tidiness -- it is what makes the",
+    "same file portable. A skill distributed outside the CLI is validated against a fixed field",
+    "list, and an unrecognised TOP-LEVEL key is rejected outright rather than ignored. 'metadata'",
+    "is the sanctioned free-form map, so a governance block nested there travels; the same fields",
+    "hoisted to the top level do not. See SKILL-FRONTMATTER.md for the dated source.",
+    "",
+    "PROFILES exist because one tree is usually not one contract. A curated catalogue wants an",
+    "owner and a review date; a generated bundle wants an invocation name and nothing else.",
+    "Requiring the catalogue's block everywhere fails every file in the second tree and invents",
+    "governance that tree does not use -- which is how a gate stops being read."
+  ],
+
+  "description_max_chars": 1024,
+  "_description_max_chars_note": [
+    "A CONVENTION, not a platform limit, and labelled as one on purpose. The platform's own cap",
+    "is larger and is a truncation rather than a rejection -- see SKILL-FRONTMATTER.md, which",
+    "carries the figure with the date it was checked. Set this to whatever your catalogue can",
+    "defend; the check reports the number back so a reader can see which one they are held to."
+  ],
+
+  "placeholder_values": ["TBD", "TODO", "null", "None", "N/A", "-"],
+  "_placeholder_values_note": [
+    "A required field filled with 'TBD' is not a filled field. Without this list the gate passes",
+    "on a template nobody completed, which is worse than no gate: it certifies the placeholder."
+  ],
+
+  "fields": {
+    "owner": "The person answerable for the skill. A name, not a team, so the question 'who decides?' has one answer.",
+    "backup_owner": "Who answers when the owner cannot. Empty is honest; absent is not.",
+    "approved_by": "Who accepted this into the catalogue. CATALOGUE GOVERNANCE ONLY -- it is not a security or legal approval, and it confers nothing on anything the skill reviews.",
+    "approval_date": "When that acceptance happened. ISO date.",
+    "review_date": "When it must be looked at again. ISO date. A skill past its review date is a claim nobody has re-checked.",
+    "sunset_date": "When it stops being current. Empty while live. Sunset by BANNER, never by deletion -- the file is a deliberate record of what was once advised.",
+    "risk_tier": "How much it can do, on a scale you define. Honest tiering is the whole value; a catalogue where everything is tier 1 has measured nothing.",
+    "risk_factors": "The SPECIFIC residual risk, the mechanism that bounds it, and the test that asserts the mechanism. All three, or it is a ritual.",
+    "pii_handling": "What personal data it touches, and what it does with it. 'None' is a valid answer and must still be stated.",
+    "changelog_url": "Where its history can be read. A pointer at nothing is worse than no pointer.",
+    "eval_pass_rate": "Measured triggering accuracy, written back by eval_skills.py. Never hand-edited.",
+    "eval_last_run": "When that measurement was taken. A rate with no date is a claim about now."
+  },
+
+  "profiles": [
+    {
+      "name": "catalogue",
+      "glob": "*/SKILL.md",
+      "container_glob": "*",
+      "required_top": ["description"],
+      "required_metadata": ["owner", "risk_tier", "approved_by", "review_date"],
+      "name_matches_directory": true,
+      "slash_command_matches_directory": false,
+      "note": [
+        "'name' is NOT in required_top, and that is a deliberate departure from the rule this was",
+        "extracted from. The CLI does not require it and does not derive the command from it in a",
+        "personal or project skill -- the directory name does that, and 'name' is a display label.",
+        "So requiring it enforces a house style, which is fine, but calling it a platform rule is",
+        "not. It is checked WHEN PRESENT (name_matches_directory) and not demanded when absent.",
+        "Add it to required_top if your catalogue wants it; the point is that the choice is yours",
+        "and is visible here rather than hardcoded in a script."
+      ]
+    },
+    {
+      "name": "bundle",
+      "glob": "*/skills/*/SKILL.md",
+      "container_glob": "*/skills",
+      "required_top": ["name", "description"],
+      "required_metadata": [],
+      "name_matches_directory": true,
+      "slash_command_matches_directory": true,
+      "note": [
+        "A generated bundle: files produced from a source tree by a generator. Two things change.",
+        "'name' IS required here, because in a PLUGIN SKILL -- the documentation's term for what",
+        "this profile calls a bundle -- it sets the last segment of the command rather than a",
+        "display label, so a mismatch means the command a user types and the skill that answers",
+        "have drifted apart. And the governance block is deliberately NOT required: no generated",
+        "file carries one, so demanding it would fail every file and invent a contract nobody keeps.",
+        "",
+        "'slash_command' is NOT required, and that is the correction this profile most needed. It",
+        "is not one of the six frontmatter fields accepted outside the CLI, so a file carrying it",
+        "fails packaging or upload with a HARD ERROR rather than having the key ignored -- exactly",
+        "the trap the comment at the top of this file warns about. Requiring it made the schema",
+        "mandate the one thing the prose beside it says never to do. It is also repo-local",
+        "vocabulary that leaked in when this schema was generalised out of a single plugin bundle.",
+        "",
+        "So it is a DELIBERATE LOCAL EXTENSION: checked when present, never demanded. A tree that",
+        "chooses to carry it gets slash_command_matches_directory enforced against the directory; a",
+        "tree that does not carry it passes. That is the treatment 'name' already gets in the",
+        "catalogue profile, for the same reason. The trade-off a local extension makes -- a local",
+        "convenience bought with portability outside the CLI -- is now visible here rather than",
+        "latent in a required_top nobody read.",
+        "",
+        "Why lint a generated tree at all: a generator proves its output matches its input, and a",
+        "parity check that strips frontmatter before diffing proves nothing about the frontmatter.",
+        "A malformed-but-faithfully-generated file passes both. This is the check that does not."
+      ]
+    }
+  ]
+}

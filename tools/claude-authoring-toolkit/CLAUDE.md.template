@@ -1,0 +1,105 @@
+<!--
+  A CLAUDE.md skeleton. Every line below is structure; none of it is content.
+
+  Fill in the angle-bracket placeholders and delete what you do not use. If you finish and this
+  file is long, something has gone wrong -- see "Why this is a pointer" below, and check it with
+  check_pointer_file.py rather than by reading it.
+-->
+
+# <PROJECT NAME> — always-on instructions
+
+**This file is a pointer, not a rule book.**
+
+It is loaded **in full, at the start of every session, however long it is** — length is not
+truncated, it is simply charged. That has two consequences that decide its whole shape:
+
+1. **Everything here is charged to every task**, including the ones it has nothing to do with, and
+   longer files are documented to reduce adherence. Target under 200 lines.
+2. **Nothing here is gated.** If it lives outside the repository it describes, no CI can read it,
+   nothing can diff it against the system it documents, and a rule kept here drifts silently.
+
+So the substance lives where it can be checked, and this file says only where that is.
+
+<!--
+  Two mechanics worth knowing while you edit this file:
+
+  - Block-level HTML comments like this one are stripped before the file is injected into context,
+    so maintainer notes cost nothing. Notes to humans belong in comments; notes to the model do not.
+  - After a /compact, a project-root file is re-read from disk and re-injected. Path-scoped rules
+    and nested files are NOT -- they reload the next time a matching file is read. So a rule that
+    must survive compaction unconditionally is one of the few with a real claim on this file.
+-->
+
+
+---
+
+## Where the rules actually live
+
+| What | Where | Loads when |
+|---|---|---|
+| <domain A: e.g. the data-access rules> | `<path/to/rules/domain-a.md>` | you touch <glob for domain A> |
+| <domain B> | `<path/to/rules/domain-b.md>` | you touch <glob for domain B> |
+| <a task procedure, start to finish> | a skill — `<path/to/skills/name>` | its description matches the request |
+| <a durable lesson from a past mistake> | memory | recalled by relevance |
+| <every current count, threshold, percentage> | nowhere in this file, on purpose | measure it live |
+
+**Read those, do not recall them.** A figure copied up into this file is a figure that will be
+wrong later with nothing to catch it.
+
+---
+
+## The always-on subset
+
+Keep a rule here **only** if it bites where no gated file will load: in another repository, in a
+scratch script, or in a session that never opens a matching file at all. Everything else belongs
+in the table above.
+
+Each rule kept here should also earn it by failing **silently and expensively** — a plausible
+wrong answer, or an empty result that reads as "no such thing". A rule whose violation is
+immediately obvious does not need to be in every prompt.
+
+- **<Rule 1 — one line, stating the failure mode, not just the instruction.>**
+  <Why it cannot live behind a gate. What going wrong looks like.>
+- **<Rule 2.>**
+  <As above.>
+
+---
+
+## <Optional> Command shape
+
+<If your permission configuration grants a command tool broadly, state the authoring convention
+that keeps that grant reviewable, and point at the longer version rather than restating it. One
+line here; the reasoning lives in the file you point at.>
+
+---
+
+## <Optional> Auto-triggers
+
+<If your setup routes requests to skills by name or phrase, the routing table goes here — it is
+genuinely always-on, because it has to be readable before the model knows which skill applies.
+Keep it a table of trigger → target and nothing else; the procedure belongs in the skill.>
+
+| Trigger | Skill |
+|---|---|
+| <phrase or intent> | `<skill-name>` |
+
+---
+
+## Why this is a pointer
+
+State the reason in the file, so the next person to add a paragraph sees it:
+
+> An always-on file that duplicates gated content will drift, and the drift is invisible — both
+> copies read as authoritative and nothing compares them. Two rules on <this project> already
+> rotted that way. Keeping the substance behind a gate is not tidiness; it is the only version of
+> it that anything can check.
+
+And then check it, because a convention nobody enforces is a convention that decays:
+
+```
+python check_pointer_file.py <path/to/CLAUDE.md> --rules-dir <path/to/rules>
+```
+
+That asserts the three properties a script can hold — every pointer resolves, no line here
+duplicates a gated rule, and the file is inside the budget you set. It cannot tell you whether a
+rule belongs here. Nothing can; that judgement is the one you have to keep making.
