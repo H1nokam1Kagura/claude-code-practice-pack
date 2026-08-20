@@ -1,8 +1,15 @@
 ﻿<#
 .SYNOPSIS
-    Claim gate for tools/** -- the practice documents, the four toolkits, and the CI layer
-    (seven directories: claude-dev-practice holds the documents rather than a toolkit, and
-    practice-gate holds this script's own registries).
+    Claim gate for tools/** -- the practice documents, the toolkits, the firing layer and the CI
+    layer: nine directories, plus the four gate and builder scripts beside them, so thirteen entries
+    in all. claude-dev-practice holds documents rather than a toolkit, claude-practice-layer is the
+    one unit that installs rather than being read, and practice-gate holds this script's registries.
+
+    THIS SENTENCE USED TO SAY "the four toolkits ... seven directories" AND IT WENT WRONG SILENTLY,
+    which is the same defect check H below was added for and is the reason the count is now stated
+    here at all rather than being left vague enough never to be falsifiable. Nothing gates this
+    docblock -- check H gates the README's version of the same list, and the honest note is that a
+    number in a comment is the weaker of the two homes.
 
 .DESCRIPTION
     tools/ ships prose that makes checkable assertions: that a cited file exists, that a quoted
@@ -22,9 +29,9 @@
         A check that could not run must never report PASS, and a guarantee that depends on
         remembering to apply it is not a guarantee.
 
-    SEVEN CHECKS. They are lettered A-G in the order they were written, which is no longer the order
-    they appear in this file or run in -- E and F were added after B/C/D, and G after all of them.
-    The letters are historical labels, not sequence.
+    EIGHT CHECKS. They are lettered A-H in the order they were written, which is no longer the order
+    they appear in this file or run in -- E and F were added after B/C/D, and G and H after all of
+    them. The letters are historical labels, not sequence.
 
       A. Citations       Every path-shaped or script-named token cited in tools/**/*.md resolves
                          on disk, or is registered in practice-gate/external-citations.json with a
@@ -88,6 +95,20 @@
                          flattering nobody after the field moves. Nothing else in this file would
                          have gone red for that.
 
+      H. Front door      Every entry directly under this gate's scanned root is named in the
+                         repository README's tools section, and every unit that section names
+                         exists. The second check that reads OUTSIDE the scanned tree, and the only
+                         one whose subject is what the prose OMITS rather than what it asserts.
+                         A-G all read the text that is there; an enumeration-by-example rots by
+                         going quiet, so everything it still names resolves and the omission is
+                         invisible from inside a green run. The table described seven units against
+                         thirteen on disk, and the newest of the three it never mentioned was the
+                         only one that makes the practice fire. Exemptions and the two controls are
+                         in practice-gate/front-door.json, both directions, same as everything else
+                         here. Applicability is decided by a marker rather than by the heading --
+                         see the check for why that inversion matters -- and a distribution reports
+                         SKIPPED, registered as a bundle boundary in practice-gate/share-pack.json.
+
     PRINT-ONLY BY CONSTRUCTION. There is no -Fix. A reporter that prints the edit is safer than an
     applier that grows a -Yes the first time somebody scripts it.
 
@@ -103,15 +124,16 @@
 
 .PARAMETER GateDir
     Directory holding the registries (external-citations, sourcing, figures, verified-against,
-    assertions, prior-art, and the redaction class table). Default: RepoRoot/tools/practice-gate.
+    assertions, prior-art, front-door, and the redaction class table).
+    Default: RepoRoot/tools/practice-gate.
 
     The redaction table is the one registry with a fallback: redaction-classes.json if it is there,
     redaction-classes.example.json if it is not, and a throw if neither is. See check C.
 
 .PARAMETER Skip
     Check names to deliberately NOT run: Citations, Sourcing, Figures, Redaction, HarnessPins,
-    Assertions, PriorArt -- the full set the ValidateSet accepts. A skipped check exits 2 and is
-    named in the report. It is never counted as a pass.
+    Assertions, PriorArt, FrontDoor -- the full set the ValidateSet accepts. A skipped check exits 2
+    and is named in the report. It is never counted as a pass.
 
 .PARAMETER Only
     The inverse of -Skip: the checks this run CONSISTS OF. Everything else is out of scope rather
@@ -122,8 +144,9 @@
     gate anything -- and reading exit 2 as success is precisely the fail-open this repository has
     already been bitten by twice. -Only means "this is the whole check for this root". Citations
     over skills/ is the case it exists for: Sourcing, Figures, Redaction, HarnessPins and PriorArt
-    are tuned to tools/ prose and are not applicable there, so declining them is not the claim
-    being made.
+    are tuned to tools/ prose and are not applicable there, and FrontDoor is an argument about a
+    section of the README that enumerates tools/ and nothing else, so declining them is not the
+    claim being made.
 
     Mutually exclusive with -Skip -- passing both is a contradiction about what the run is, and
     is rejected rather than resolved.
@@ -186,9 +209,9 @@ param(
     [string]$DocRoot,
     [string]$RepoRoot,
     [string]$GateDir,
-    [ValidateSet('Citations', 'Sourcing', 'Figures', 'Redaction', 'HarnessPins', 'Assertions', 'PriorArt')]
+    [ValidateSet('Citations', 'Sourcing', 'Figures', 'Redaction', 'HarnessPins', 'Assertions', 'PriorArt', 'FrontDoor')]
     [string[]]$Skip = @(),
-    [ValidateSet('Citations', 'Sourcing', 'Figures', 'Redaction', 'HarnessPins', 'Assertions', 'PriorArt')]
+    [ValidateSet('Citations', 'Sourcing', 'Figures', 'Redaction', 'HarnessPins', 'Assertions', 'PriorArt', 'FrontDoor')]
     [string[]]$Only = @(),
     [int]$MaxPinAgeDays = 180,
     [int]$MaxFigureAgeDays = 180,
@@ -1408,6 +1431,213 @@ function Test-PriorArt {
     return $r
 }
 
+# ── CHECK H -- THE FRONT DOOR ENUMERATES EVERY UNIT ──────────────────────────────
+# Every check above reads the prose and asks whether what it SAYS is true. This one asks whether it
+# says enough, which is a different failure and the only one none of the others can see.
+#
+# The repository README carries a section enumerating what is under tools/. It was complete when it
+# was written and went incomplete as units were added -- seven described against thirteen entries on
+# disk -- and the newest of the three it never mentioned was the only unit that makes any of the
+# practice actually fire. Nothing here went red. It could not: an enumeration-by-example rots in the
+# one direction no other check looks, because everything it DOES name still resolves. Citations
+# passed, sections were sourced, figures were dated, and the omission was invisible from inside a
+# green run. Third occurrence of that defect class in this repository -- a remembered list of
+# shipped scripts that said six when it was nine, and a whitelisted pin sweep that exempted whatever
+# nobody remembered to add, are the other two, and both were fixed by enumerating from the tree and
+# checking the registry BOTH WAYS. So is this.
+#
+#   forward  every entry directly under the scanned root is named in the section, or is registered
+#            in practice-gate/front-door.json with the reason it deliberately is not.
+#   reverse  every unit the section names exists. The quieter half: a row pointing at a directory
+#            somebody renamed reads exactly like a row pointing at one that is still there.
+#
+# IT REACHES OUTSIDE THE SCANNED ROOT, and that is not a new liberty -- check F already reads
+# planning documents that could never survive a redaction scan, and its scope is a registry rather
+# than a tree walk. Same shape here, and the same cost: a root that does not hold the front door
+# cannot answer the question. What it must not do is guess.
+#
+# SO APPLICABILITY IS DECIDED BY A MARKER, AND THE MARKER IS NOT THE SECTION HEADING. A distribution
+# carries a README.md at its root as well, and it is a DIFFERENT DOCUMENT -- the pack's front door
+# is authored under another name and renamed on the way in, because this repository already has a
+# README.md. A check keyed on "is there a README.md here" would read the pack's front door, not find
+# a section that was never in it, and report the pack broken. It keys on the SOURCE name instead,
+# which the builder asserts is nowhere on disk in a built pack: present means this tree is the
+# repository the front door belongs to, absent means it is not, and the answer is SKIPPED -- never
+# a pass, and registered as a bundle boundary in share-pack.json so the day that changes the entry
+# fails as stale.
+#
+# Keying on the heading would have been simpler and it inverts the whole check: a mangled or deleted
+# heading would then be indistinguishable from a distribution, and the section this check exists to
+# police would switch it off by disappearing. So in a tree that HAS the marker, a missing heading is
+# a FAIL that quotes the heading it looked for, and a unit list that comes back empty refuses
+# outright rather than reporting a section that documents nothing as complete.
+
+function Test-FrontDoor {
+    param([string]$Root, [string]$RepoRoot, [hashtable]$Registry)
+
+    $r = [CheckResult]::new('FrontDoor')
+
+    # Same refusals, same wording, as the empty harness_keywords set in check D and the empty
+    # attribution registry in check G. A blank front door, a blank heading or a blank marker each
+    # leave this check scanning for nothing, and scanning for nothing is indistinguishable from a
+    # complete section.
+    foreach ($k in @('front_door', 'section_heading', 'repository_marker')) {
+        if ([string]::IsNullOrWhiteSpace([string]$Registry[$k])) {
+            throw "front-door.json has a blank '$k' -- refusing to check a front door, a section or a tree it cannot name"
+        }
+    }
+    foreach ($k in @('worked_example', 'counter_example')) {
+        $ctl = $Registry[$k]
+        if ($null -eq $ctl -or -not $ctl.ContainsKey('unit') -or [string]::IsNullOrWhiteSpace([string]$ctl.unit) -or
+            -not $ctl.ContainsKey('reason') -or [string]::IsNullOrWhiteSpace([string]$ctl.reason)) {
+            throw "front-door.json '$k' needs a non-blank 'unit' and 'reason' -- a control with no subject asserts nothing, and one with no reason cannot be widened, narrowed or struck"
+        }
+    }
+
+    $frontDoor = [string]$Registry.front_door
+    $heading = [string]$Registry.section_heading
+    $marker = [string]$Registry.repository_marker
+
+    # APPLICABILITY FIRST, before anything is enumerated or read. Deciding this after the tree walk
+    # would mean a distribution's differently-shaped tools/ produced findings that were then thrown
+    # away, and a check that computes findings it discards is one edit from reporting them.
+    if (-not (Test-Path -LiteralPath (Join-Path $RepoRoot $marker))) {
+        $r.Status = 'SKIPPED'
+        $r.Note = "no $marker beside $RepoRoot -- the README.md here is a distribution's front door and not the repository's, which is a different document. NOT RUN, and not a pass"
+        return $r
+    }
+
+    $doorPath = Join-Path $RepoRoot $frontDoor
+    if (-not (Test-Path -LiteralPath $doorPath -PathType Leaf)) {
+        $r.Fail("$marker is here, so this is the repository -- and there is no $frontDoor at $RepoRoot. The front door is the one document this check is about; a tree missing it cannot be reported complete")
+        return $r
+    }
+
+    # ENUMERATED FROM THE TREE, NEVER FROM A LIST, which is the entire remedy for this defect class.
+    # Directories AND files at the top level, because four of the thirteen units are single scripts
+    # and a directory-only walk would have exempted every one of them. Build residue is dropped by
+    # the same names Get-ScanFiles drops, so the two walks cannot disagree about what counts as
+    # content.
+    $onDiskNames = @(Get-ChildItem -LiteralPath $Root -Force -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -notmatch '^(__pycache__|node_modules|\.git)$' } |
+        ForEach-Object { $_.Name } | Sort-Object)
+    if ($onDiskNames.Count -eq 0) {
+        throw "nothing to enumerate under $Root -- an empty unit list would agree with every section ever written, including one that documents nothing"
+    }
+    # ORDINAL SETS, case included, and that is a decision rather than an idiom. PowerShell's
+    # -contains is case-INSENSITIVE, so a row spelled with the wrong case would satisfy this check
+    # and still be a link that 404s on a case-sensitive forge -- which is where this README is read.
+    $onDisk = [System.Collections.Generic.HashSet[string]]::new([string[]]$onDiskNames, [System.StringComparer]::Ordinal)
+
+    # THE SECTION, delimited by the next level-2 heading. `^## ` and not `^##`: the section carries
+    # level-3 subheadings of its own, and a terminator that stopped at the first of those would read
+    # one table out of two and report every unit in the second as undocumented.
+    $lines = Read-Lines -Path $doorPath
+    $start = -1
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i].TrimEnd() -eq $heading) { $start = $i; break }
+    }
+    if ($start -lt 0) {
+        $r.Fail("$frontDoor has no line reading exactly '$heading' -- the section this check is about is gone or was renamed, and a front door with no unit list must not be reported complete. Restore the heading, or change section_heading in front-door.json to the one it now carries")
+        return $r
+    }
+    $end = $lines.Count
+    for ($i = $start + 1; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -match '^## ') { $end = $i; break }
+    }
+    $section = ($lines[($start + 1)..($end - 1)]) -join "`n"
+
+    # THE WHOLE SECTION, not just its tables. Three of the units are documented in prose below the
+    # tables rather than in a row, and demanding a table row would have failed a section that
+    # describes them at length. What is being asserted is that the front door MENTIONS each unit
+    # where a reader will find it, which is what the section is.
+    $documentedNames = @([regex]::Matches($section, '(?<![A-Za-z0-9._-])tools/(?<n>[A-Za-z0-9][A-Za-z0-9._-]*)') |
+        ForEach-Object { $_.Groups['n'].Value } | Sort-Object -Unique)
+    $documented = [System.Collections.Generic.HashSet[string]]::new([string[]]$documentedNames, [System.StringComparer]::Ordinal)
+    if ($documented.Count -eq 0) {
+        $r.Fail("the '$heading' section of $frontDoor names no unit under $Root at all -- either the section was emptied or the extractor has stopped matching, and both look exactly like a tree with nothing in it")
+        return $r
+    }
+
+    # The exemptions, shape-checked before they are trusted to excuse anything. An entry with no
+    # reason is a silencer, which is the same refusal the sweep exclusions in check D make.
+    $exempt = @($Registry.exempt)
+    $exemptNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($e in $exempt) {
+        if ($null -eq $e -or -not $e.ContainsKey('entry') -or [string]::IsNullOrWhiteSpace([string]$e.entry)) {
+            $r.Fail("front-door.json has an exempt entry with no 'entry' -- an exemption that names nothing excuses everything or nothing, and neither is a decision")
+            continue
+        }
+        if (-not $e.ContainsKey('reason') -or [string]::IsNullOrWhiteSpace([string]$e.reason)) {
+            $r.Fail("front-door.json exempts 'tools/$($e.entry)' with no stated reason -- an entry left out of the front door without one is an oversight, not a decision")
+        }
+        $null = $exemptNames.Add([string]$e.entry)
+    }
+
+    # ── the controls, asserted on every run ─────────────────────────────────────
+    # Not self-test-only, for the reason every class table here proves itself before it scans: a
+    # comparison that has stopped matching produces an empty finding set, and an empty finding set
+    # is exactly what a complete section produces.
+    $we = [string]$Registry.worked_example.unit
+    $r.Candidates++
+    if (-not $onDisk.Contains($we)) {
+        $r.Fail("the registered worked example 'tools/$we' is not under $Root -- it was chosen as the unit whose omission this check exists for, so a run that cannot find it is a run whose PASS means nothing. Point worked_example at a unit that is there")
+    }
+    if (-not $documented.Contains($we)) {
+        $r.Fail("the registered worked example 'tools/$we' is not named in the '$heading' section -- the positive control did not fire, so this check is not measuring what it claims to")
+    }
+
+    $ce = [string]$Registry.counter_example.unit
+    $r.Candidates++
+    $extends = @($onDiskNames | Where-Object { $ce.StartsWith($_, [System.StringComparison]::Ordinal) -and $ce -ne $_ })
+    if ($extends.Count -eq 0) {
+        $r.Fail("the registered counter-example 'tools/$ce' is not an extension of any entry under $Root, so asserting that it does not resolve proves nothing -- it exists to prove the comparison is EXACT rather than prefix-wise, and a name that was never a candidate for the loose match cannot show that. Pick a real unit's name with a token appended")
+    }
+    if ($onDisk.Contains($ce)) {
+        $r.Fail("the registered counter-example 'tools/$ce' now EXISTS -- it was picked as a near-miss that resolves against nothing, so either document it as a unit and pick another near-miss, or rename it")
+    }
+    if ($documented.Contains($ce)) {
+        $r.Fail("the '$heading' section names 'tools/$ce', which was registered as a near-miss that resolves against nothing -- the section has acquired a row for a unit that does not exist")
+    }
+
+    # ── forward ─────────────────────────────────────────────────────────────────
+    foreach ($name in $onDiskNames) {
+        $r.Candidates++
+        if ($exemptNames.Contains($name)) { continue }
+        if (-not $documented.Contains($name)) {
+            $r.Fail("tools/$name exists and the '$heading' section of $frontDoor does not name it -- a reader of the front door has no way to learn it is there. Add it to the section, or register it in front-door.json with the reason it stays out")
+        }
+    }
+
+    # ── reverse ─────────────────────────────────────────────────────────────────
+    foreach ($name in $documentedNames) {
+        $r.Candidates++
+        if (-not $onDisk.Contains($name)) {
+            $r.Fail("the '$heading' section of $frontDoor names 'tools/$name', and there is no such entry under $Root -- the unit was renamed or removed and the front door was not. Fix the name, or strike the row")
+        }
+    }
+
+    # ── the exemptions, both ways ───────────────────────────────────────────────
+    # An exemption is not allowed to be a silence with nothing under it. Same reasoning as a stale
+    # sweep exclusion in check D and a dead attribution in check G: it keeps working forever while
+    # covering nothing, and it is indistinguishable by reading from one that is still load-bearing.
+    foreach ($e in $exempt) {
+        if ($null -eq $e -or -not $e.ContainsKey('entry') -or [string]::IsNullOrWhiteSpace([string]$e.entry)) { continue }
+        $n = [string]$e.entry
+        $r.Candidates++
+        if (-not $onDisk.Contains($n)) {
+            $r.Fail("front-door.json exempts 'tools/$n' from the front door and no such entry is under $Root -- the exemption outlived the file it was written for, and the next unit to land on that name inherits an exemption nobody granted it. Remove it, or fix the name")
+        }
+        elseif ($documented.Contains($n)) {
+            $r.Fail("front-door.json exempts 'tools/$n' from the front door and the '$heading' section names it anyway -- the exemption covers nothing; strike it")
+        }
+    }
+
+    $r.Note = "$($onDiskNames.Count) entry(ies) under $Root, $($documentedNames.Count) named in '$heading', $($exempt.Count) registered exempt"
+    $r.Seal()
+    return $r
+}
+
 # ── SELF-TEST ───────────────────────────────────────────────────────────────────
 # A gate that has never been red is unproven. These are the negative controls, run against
 # fixtures in a temp directory; nothing is written inside the repository.
@@ -1953,6 +2183,18 @@ function Invoke-SelfTest {
             if (-not (Assert-Case "live registry $n.json loads" 'True' $ok.ToString())) { $failures++ }
         }
 
+        #    front-door.json keys on none of 'entries', so it needs its own line with the keys the
+        #    dispatch site actually demands. Asserted with the SAME key list, deliberately: a
+        #    registry that loads under a laxer shape than the live run requires is a control that
+        #    passes for a file the live run would refuse.
+        $ok = $true
+        try {
+            $null = Import-Registry -Path (Join-Path $gateDir 'front-door.json') -Name 'front-door' `
+                -RequireKeys @('front_door', 'section_heading', 'repository_marker', 'worked_example', 'counter_example', 'exempt')
+        }
+        catch { $ok = $false }
+        if (-not (Assert-Case 'live registry front-door.json loads' 'True' $ok.ToString())) { $failures++ }
+
         #    The class table needs its own line: it is loaded through a resolver rather than
         #    Import-Registry and it keys on 'classes' rather than 'entries', so the loop above cannot
         #    reach it. Asserted as "resolves to SOMETHING and parses", not as "resolves to the real
@@ -2160,6 +2402,201 @@ function Invoke-SelfTest {
             $res = Test-HarnessPins -Root $kwDir -RepoRoot $kwDir -Registry $kwReg
             if (-not (Assert-Case '...and no keyword fires on its counter-example' '0' ([string]$res.Findings.Count))) { $failures++ }
         }
+
+        # 13. THE FRONT DOOR -- both directions, the refusals, and the two inversions that decide
+        #     whether this check is worth having.
+        #
+        #     The defect it exists for is an omission, so every control here is about a SILENCE
+        #     rather than about a wrong string: an entry nothing mentions, a row pointing at nothing,
+        #     an exemption covering nothing, a heading that has gone and taken the check with it. The
+        #     last of those is the one that matters most, because it is the only way this check can
+        #     fail OPEN -- delete the section and a heading-keyed applicability test would report the
+        #     tree as a distribution and pass. So 13d and 13e are a matched pair and must stay one:
+        #     no marker is SKIPPED, marker and no heading is FAIL, and nothing may be PASS.
+        $fdRoot = Join-Path $tmp 'frontdoor'
+        $fdTools = Join-Path $fdRoot 'tools'
+        $null = New-Item -ItemType Directory -Path (Join-Path $fdTools 'alpha-toolkit') -Force
+        [System.IO.File]::WriteAllText((Join-Path $fdTools 'beta.ps1'), "# fixture`n")
+        [System.IO.File]::WriteAllText((Join-Path $fdRoot 'PACK-README.md'), "# the pack's front door (fixture)`n")
+
+        # The fixture front door. A trailing section AFTER the tools section on purpose: the third
+        # unit is mentioned only there, so 13b also asserts that the section boundary is real and
+        # that a mention elsewhere in the document does not count as documentation of a unit.
+        function Write-FdReadme {
+            param([string]$Body, [string]$Heading = '## Tools')
+            [System.IO.File]::WriteAllText((Join-Path $fdRoot 'README.md'),
+                "# fixture`n`n$Heading`n`n$Body`n`n## Something else`n`nMentions tools/gamma out of scope.`n")
+        }
+        $fdReg = @{
+            front_door        = 'README.md'
+            section_heading   = '## Tools'
+            repository_marker = 'PACK-README.md'
+            worked_example    = @{ unit = 'alpha-toolkit'; reason = 'self-test fixture' }
+            counter_example   = @{ unit = 'alpha-toolkit-extra'; reason = 'self-test fixture' }
+            exempt            = @()
+        }
+        $fdComplete = "| [``alpha-toolkit/``](tools/alpha-toolkit/README.md) | a unit |`n| [``tools/beta.ps1``](tools/beta.ps1) | a script |"
+
+        # 13a. the baseline: a section naming every entry passes. Without this every FAIL below could
+        #      be the check being broken rather than the fixture being wrong.
+        Write-FdReadme -Body $fdComplete
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $fdReg
+        if (-not (Assert-Case 'a section naming every entry passes' 'PASS' $res.Status)) { $failures++ }
+
+        # 13b. FORWARD: an entry the section does not name. This is the measured defect, reproduced.
+        #      The finding must NAME the unit -- a status-only assertion would go green on the wrong
+        #      one and tell nobody, which is the lesson control 12 records.
+        Write-FdReadme -Body "| [``alpha-toolkit/``](tools/alpha-toolkit/README.md) | a unit |"
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $fdReg
+        if (-not (Assert-Case 'an undocumented entry fails' 'FAIL' $res.Status)) { $failures++ }
+        $named = (($res.Findings -join ' ').Contains('tools/beta.ps1 exists')).ToString()
+        if (-not (Assert-Case '...naming the unit the front door omits' 'True' $named)) { $failures++ }
+
+        # 13c. REVERSE: a row for a unit that is not there. The quieter half -- it reads exactly like
+        #      a row for one that is.
+        Write-FdReadme -Body ($fdComplete + "`n| [``tools/delta-toolkit/``](tools/delta-toolkit/README.md) | gone |")
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $fdReg
+        if (-not (Assert-Case 'a row for a unit that does not exist fails as stale' 'FAIL' $res.Status)) { $failures++ }
+        $named = (($res.Findings -join ' ').Contains("names 'tools/delta-toolkit'")).ToString()
+        if (-not (Assert-Case '...naming the row to strike' 'True' $named)) { $failures++ }
+
+        # 13c-nm. THE NEAR-MISS, AND IT IS THE CASE THAT MATTERS. A row for alpha-toolkit-extra must
+        #      fail even though alpha-toolkit is on disk. Under -contains, StartsWith or -like it
+        #      would resolve against its shorter sibling, and a stale row would sit there green
+        #      forever -- which is the failure the reverse direction was added to catch.
+        Write-FdReadme -Body ($fdComplete + "`n| [``tools/alpha-toolkit-extra/``](tools/alpha-toolkit-extra/README.md) | near miss |")
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $fdReg
+        if (-not (Assert-Case 'a near-miss row is NOT satisfied by its prefix' 'FAIL' $res.Status)) { $failures++ }
+
+        # 13c-case. Case is part of the name. A row spelled Alpha-toolkit is a link that 404s on a
+        #      case-sensitive forge, and PowerShell's -contains would have called it a match.
+        Write-FdReadme -Body "| [``tools/Alpha-toolkit/``](tools/Alpha-toolkit/README.md) | wrong case |`n| [``tools/beta.ps1``](tools/beta.ps1) | a script |"
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $fdReg
+        if (-not (Assert-Case 'a row differing only in case does not satisfy the check' 'FAIL' $res.Status)) { $failures++ }
+
+        # 13d. FAIL CLOSED. The heading is gone, and the marker says this is the repository -- so
+        #      there is no honest reading of this tree as complete. Nothing here may be PASS.
+        Write-FdReadme -Body $fdComplete -Heading '## Toolss'
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $fdReg
+        if (-not (Assert-Case 'a mangled section heading FAILS, never passes' 'FAIL' $res.Status)) { $failures++ }
+        $named = (($res.Findings -join ' ').Contains("no line reading exactly '## Tools'")).ToString()
+        if (-not (Assert-Case '...quoting the heading it looked for' 'True' $named)) { $failures++ }
+
+        # 13d-empty. A section that is present and names nothing is the extractor-broke case wearing
+        #      a valid document, and it must not pass either.
+        Write-FdReadme -Body 'Prose with no unit reference in it at all.'
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $fdReg
+        if (-not (Assert-Case 'a section naming no unit at all fails' 'FAIL' $res.Status)) { $failures++ }
+
+        # 13d-h3. THE SECTION BOUNDARY IS `## `, NOT `##`. The live section carries level-3
+        #      subheadings, and a terminator that stopped at the first of those would read one table
+        #      out of two and call every unit in the second undocumented -- a red gate for a
+        #      complete document, which costs as much as a green one for an incomplete one.
+        Write-FdReadme -Body "### Toolkits`n`n| [``tools/alpha-toolkit/``](tools/alpha-toolkit/README.md) | a unit |`n`n### Scripts`n`n| [``tools/beta.ps1``](tools/beta.ps1) | a script |"
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $fdReg
+        if (-not (Assert-Case 'level-3 subheadings do not truncate the section' 'PASS' $res.Status)) { $failures++ }
+
+        # 13e. ...and the other polarity of 13d, which is what makes it meaningful. No marker means
+        #      the README.md here is a distribution's front door -- a different document -- and the
+        #      answer is SKIPPED. If this were PASS, 13d would be the only thing standing between a
+        #      deleted section and a green gate.
+        $fdDist = Join-Path $tmp 'frontdoor-dist'
+        $null = New-Item -ItemType Directory -Path (Join-Path $fdDist 'tools/alpha-toolkit') -Force
+        [System.IO.File]::WriteAllText((Join-Path $fdDist 'README.md'), "# a distribution's front door`n`n## What's inside`n`nNo tools section here.`n")
+        $res = Test-FrontDoor -Root (Join-Path $fdDist 'tools') -RepoRoot $fdDist -Registry $fdReg
+        if (-not (Assert-Case 'a tree with no source marker reports SKIPPED' 'SKIPPED' $res.Status)) { $failures++ }
+
+        # 13e-door. The marker is there and the front door is not: a repository that has lost its
+        #      README is not a distribution, and must not borrow the SKIPPED verdict.
+        $fdNoDoor = Join-Path $tmp 'frontdoor-nodoor'
+        $null = New-Item -ItemType Directory -Path (Join-Path $fdNoDoor 'tools/alpha-toolkit') -Force
+        [System.IO.File]::WriteAllText((Join-Path $fdNoDoor 'PACK-README.md'), "# fixture`n")
+        $res = Test-FrontDoor -Root (Join-Path $fdNoDoor 'tools') -RepoRoot $fdNoDoor -Registry $fdReg
+        if (-not (Assert-Case 'marker present and front door missing FAILS' 'FAIL' $res.Status)) { $failures++ }
+
+        # 13f. AN EMPTY UNIT LIST REFUSES. It would agree with every section ever written, including
+        #      one that documents nothing -- the same refusal the empty keyword set makes in check D.
+        $fdEmpty = Join-Path $tmp 'frontdoor-empty'
+        $null = New-Item -ItemType Directory -Path (Join-Path $fdEmpty 'tools') -Force
+        [System.IO.File]::WriteAllText((Join-Path $fdEmpty 'PACK-README.md'), "# fixture`n")
+        [System.IO.File]::WriteAllText((Join-Path $fdEmpty 'README.md'), "# fixture`n`n## Tools`n`nSee tools/alpha-toolkit/README.md.`n")
+        $threw = $false
+        try { $null = Test-FrontDoor -Root (Join-Path $fdEmpty 'tools') -RepoRoot $fdEmpty -Registry $fdReg } catch { $threw = $true }
+        if (-not (Assert-Case 'an empty unit list raises, never passes' 'True' $threw.ToString())) { $failures++ }
+
+        # 13g. A BLANK REGISTRY FIELD RAISES rather than defaulting to something plausible. A guessed
+        #      heading or a guessed marker is a check about a document nobody chose.
+        Write-FdReadme -Body $fdComplete
+        foreach ($blank in @('front_door', 'section_heading', 'repository_marker')) {
+            $bad = @{
+                front_door        = 'README.md'
+                section_heading   = '## Tools'
+                repository_marker = 'PACK-README.md'
+                worked_example    = @{ unit = 'alpha-toolkit'; reason = 'fixture' }
+                counter_example   = @{ unit = 'alpha-toolkit-extra'; reason = 'fixture' }
+                exempt            = @()
+            }
+            $bad[$blank] = ''
+            $threw = $false
+            try { $null = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $bad } catch { $threw = $true }
+            if (-not (Assert-Case "a blank '$blank' raises" 'True' $threw.ToString())) { $failures++ }
+        }
+
+        # 13h. THE CONTROLS THEMSELVES. A worked example the section does not name means the positive
+        #      control did not fire, and a run in which it did not fire proves nothing at all.
+        $missWe = @{
+            front_door = 'README.md'; section_heading = '## Tools'; repository_marker = 'PACK-README.md'
+            worked_example = @{ unit = 'beta.ps1'; reason = 'fixture' }
+            counter_example = @{ unit = 'alpha-toolkit-extra'; reason = 'fixture' }
+            exempt = @()
+        }
+        Write-FdReadme -Body "| [``alpha-toolkit/``](tools/alpha-toolkit/README.md) | a unit |"
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $missWe
+        $named = (($res.Findings -join ' ').Contains('worked example')).ToString()
+        if (-not (Assert-Case 'a worked example the section omits is reported as such' 'True' $named)) { $failures++ }
+
+        # 13h-ce. ...and a counter-example that is not an extension of any entry is a control that
+        #      cannot prove what it is for. Asserting that 'zzz-nonesuch' does not resolve says
+        #      nothing about whether the comparison is exact; only a name a prefix-wise match WOULD
+        #      have accepted can show that.
+        Write-FdReadme -Body $fdComplete
+        $vacuousCe = @{
+            front_door = 'README.md'; section_heading = '## Tools'; repository_marker = 'PACK-README.md'
+            worked_example = @{ unit = 'alpha-toolkit'; reason = 'fixture' }
+            counter_example = @{ unit = 'zzz-nonesuch'; reason = 'fixture' }
+            exempt = @()
+        }
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $vacuousCe
+        if (-not (Assert-Case 'a counter-example extending nothing fails as vacuous' 'FAIL' $res.Status)) { $failures++ }
+
+        # 13i. AN EXEMPTION IS A DECISION, AND A DECISION HAS A REASON. Without one it is a silencer,
+        #      which is what this whole registry exists instead of.
+        Write-FdReadme -Body "| [``alpha-toolkit/``](tools/alpha-toolkit/README.md) | a unit |"
+        $noReason = $fdReg.Clone(); $noReason.exempt = @(@{ entry = 'beta.ps1' })
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $noReason
+        if (-not (Assert-Case 'an exemption with no reason fails' 'FAIL' $res.Status)) { $failures++ }
+
+        # 13j. ...and with a reason it works, which is the escape hatch behaving as designed. Without
+        #      this the registry would be a list nobody can ever add to.
+        $withReason = $fdReg.Clone()
+        $withReason.exempt = @(@{ entry = 'beta.ps1'; reason = 'self-test fixture -- deliberately not in the front door' })
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $withReason
+        if (-not (Assert-Case 'a registered exemption with a reason passes' 'PASS' $res.Status)) { $failures++ }
+
+        # 13k. THE REVERSE DIRECTION ON THE EXEMPTIONS, mode 1: the file it was written for is gone,
+        #      so the exemption now covers nothing and the next unit to land on that name inherits it.
+        $goneExempt = $fdReg.Clone()
+        $goneExempt.exempt = @(@{ entry = 'gamma.ps1'; reason = 'self-test fixture' })
+        Write-FdReadme -Body $fdComplete
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $goneExempt
+        if (-not (Assert-Case 'an exemption naming nothing on disk fails as stale' 'FAIL' $res.Status)) { $failures++ }
+
+        # 13l. ...mode 2, and the quieter one: somebody documented the unit anyway. The exemption is
+        #      now suppressing a finding that no longer exists, and reading it tells you nothing.
+        $redundant = $fdReg.Clone()
+        $redundant.exempt = @(@{ entry = 'beta.ps1'; reason = 'self-test fixture' })
+        $res = Test-FrontDoor -Root $fdTools -RepoRoot $fdRoot -Registry $redundant
+        if (-not (Assert-Case 'an exemption for a documented unit fails as stale' 'FAIL' $res.Status)) { $failures++ }
     }
     finally {
         Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
@@ -2206,7 +2643,7 @@ if ($SelfTest) { exit (Invoke-SelfTest -RepoRoot $RepoRoot -GateDir $GateDir) }
 $gateDir = $GateDir
 $results = [System.Collections.Generic.List[CheckResult]]::new()
 
-$allChecks = @('Citations', 'Sourcing', 'Figures', 'Redaction', 'HarnessPins', 'Assertions', 'PriorArt')
+$allChecks = @('Citations', 'Sourcing', 'Figures', 'Redaction', 'HarnessPins', 'Assertions', 'PriorArt', 'FrontDoor')
 
 # -Only is scope, -Skip is refusal, and they make incompatible claims about the same run. Resolving
 # the contradiction silently would mean guessing which one the caller meant, and the wrong guess is
@@ -2244,6 +2681,11 @@ foreach ($name in $selected) {
         # Scoped by -DocRoot like the other tree walks: the reverse half asks whether anything in
         # the scanned prose still cites each work, so the root it sweeps IS the question.
         'PriorArt' { $results.Add((Test-PriorArt    -Root $DocRoot -RepoRoot $RepoRoot -Registry (Import-Registry -Path (Join-Path $gateDir 'prior-art.json') -Name 'prior-art'))) }
+        # BOTH roots, and both are load-bearing: -DocRoot is the tree whose entries are enumerated,
+        # -RepoRoot is where the front door and the marker that identifies it live. This is the
+        # second check that reaches outside -DocRoot, and unlike Assertions it still walks the tree
+        # -- so it needs the pair rather than a registry standing in for one of them.
+        'FrontDoor' { $results.Add((Test-FrontDoor   -Root $DocRoot -RepoRoot $RepoRoot -Registry (Import-Registry -Path (Join-Path $gateDir 'front-door.json') -Name 'front-door' -RequireKeys @('front_door', 'section_heading', 'repository_marker', 'worked_example', 'counter_example', 'exempt')))) }
     }
 }
 

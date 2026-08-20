@@ -87,6 +87,13 @@
           "SKIPPED"
         ],
         "reason": "The negative-claim inversion re-reads the planning documents, and a distribution ships none of them -- its scope is the registry rather than the tree walk, which is the one check here that deliberately reaches outside tools/. The called gate already reports this as NOT RUN rather than as a pass; registering it means a bundle run is legible instead of red on structural grounds. If this check ever reports anything OTHER than SKIPPED against a bundle, that is a different deviation and is not covered by this entry."
+      },
+      {
+        "check": "FrontDoor",
+        "statuses": [
+          "SKIPPED"
+        ],
+        "reason": "The front-door completeness check asks whether the REPOSITORY README's tools section enumerates every unit under tools/, so like the inversion above it reads outside tools/ -- and unlike it, the file it reads is present in a bundle under the same name while being a DIFFERENT DOCUMENT. The pack's front door is authored as PACK-README.md and takes the recipient-facing name on the way in, precisely because this repository already has a README.md, and it is organised for a recipient rather than around a tools section. So the check keys applicability on the SOURCE name, which the builder asserts is nowhere on disk in a built pack: absent means this is not the tree the front door belongs to, and the answer is SKIPPED rather than a fabricated verdict about somebody else's document. Registered so a bundle run stays legible, and checked in both directions like everything here -- if a distribution ever starts carrying that section, or this check reports anything other than SKIPPED against a bundle, this entry fails and the boundary has to be restated."
       }
     ],
     "citations": [

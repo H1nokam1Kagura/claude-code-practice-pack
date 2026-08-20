@@ -5,13 +5,13 @@ this is the same discipline installed where the tool consults it without being a
 
 That distinction is the whole reason the unit exists. `tools/claude-dev-practice/` argues, at
 length and with evidence, that a guarantee depending on somebody remembering to apply it is not a
-guarantee — and then ships as four documents somebody has to remember to open. This unit closes
+guarantee — and then ships as documents somebody has to remember to open. This unit closes
 that gap for the subset of the practice that can be made mechanical.
 
 | Part | What it is | Fires when |
 |---|---|---|
 | [`CLAUDE-FRAGMENT.md`](CLAUDE-FRAGMENT.md) | The always-on subset: command shape, evidence before assertion, memory and context hygiene, autonomous execution | Every task, because it is in context before anything is opened |
-| [`skills/`](skills/) | Four practice skills, each derived from one document and reduced to a procedure | Its own trigger, judged from the description |
+| [`skills/`](skills/) | The practice skills, each derived from one document and reduced to a procedure | Its own trigger, judged from the description |
 | The floor + guard | A deny/ask floor and a `PreToolUse` hook, sourced from [`../claude-permission-toolkit/`](../claude-permission-toolkit/) | Every matching tool call, before the call happens |
 | [`Install-PracticeLayer.ps1`](Install-PracticeLayer.ps1) | Puts the three above into a configuration directory, and takes them back out | You run it |
 
@@ -89,7 +89,7 @@ warned you about.
   recipient we do not know, and it is also a real gap: set them before you adopt the layer, because
   a governance field nobody has filled in is a question with no answer rather than an answer of
   "nobody".
-- **Four skills is not the whole practice.** Only the disciplines that reduce cleanly to a procedure
+- **These skills are not the whole practice.** Only the disciplines that reduce cleanly to a procedure
   are here. The reasoning, the failure stories, and everything that needs judgement stay in
   `../claude-dev-practice/` and are meant to be read.
 
