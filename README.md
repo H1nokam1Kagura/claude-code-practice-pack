@@ -12,6 +12,7 @@ layer, and every claim in it dated against the version it was checked on.
 - [What this does not do](#what-this-does-not-do)
 - [Contributing](#contributing)
 - [Updating](#updating)
+- [Trademarks](#trademarks)
 - [License](#license)
 
 ## How it works
@@ -194,6 +195,17 @@ nothing, because the reader cannot tell which advice is load-bearing.
 
 Pull, then re-run the gates and the self-tests. If a harness pin is older than you are comfortable
 with, re-read its source — and update the date only for what you actually re-read.
+
+## Trademarks
+
+Not affiliated with, endorsed by, or sponsored by Anthropic.
+
+"Claude" and "Claude Code" are trademarks of Anthropic, PBC. They are used here only
+to identify the tool this material is about — every claim on this page is about
+working *with* that tool, and none of it is an official distribution, a fork, or a
+statement on Anthropic's behalf. Where a document here describes the tool's own
+behaviour, it says which version it was checked against and on what date, precisely
+so a reader can go and verify it against the source rather than take it from us.
 
 ## License
 
