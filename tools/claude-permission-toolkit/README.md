@@ -1,4 +1,4 @@
-# claude-permission-toolkit
+﻿# claude-permission-toolkit
 
 A stdlib-only toolkit for **validating a Claude Code permission floor by replay rather than by
 reading** — because a ruleset cannot be reviewed by looking at it. It ships a floor to start from
@@ -46,7 +46,7 @@ absent, not short. Maximum blast radius, minimum quiet, no floor. Judge a config
 Takes a corpus of invocations that were previously approved, replays it against a **candidate**
 ruleset, and treats any DENY as a regression. A before/after diff on real traffic.
 
-```
+```bash
 python replay_permissions.py --candidate settings.json --corpus settings.local.json.bak
 python replay_permissions.py --candidate settings.json --corpus approved.txt --format json
 python replay_permissions.py --candidate settings.json --corpus c.json --explain "rm -rf /tmp/x"
@@ -57,7 +57,7 @@ somebody approved, which is exactly the traffic a new floor must not break.
 
 **Exit contract**
 
-```
+```text
 0  every corpus entry replayed; nothing denied
 1  at least one previously-approved invocation is now DENIED  (a regression)
 2  replayed, but at least one entry could not be PARSED -- SKIPPED, never a pass
@@ -100,7 +100,7 @@ the docstring. If any of them starts passing, the matcher has drifted toward int
 the harness. The retired fifth case sits in the same class, inverted: its assertion is unchanged and
 its docstring records why it is no longer evidence of a floor that fails to bind.
 
-```
+```bash
 python -m unittest discover -s . -p "test_*.py"
 ```
 
@@ -206,7 +206,7 @@ that agree with each other and disagree with the specification are one wrong gua
 > **One correction travelled with the lift.** The original told the user, in its own block message,
 > to emit `.Length` or `[bool]$env:X` instead of a value — and blocked both. Its
 > `(?!\.(Length|Count))` lookahead sat after a greedy character class, so the engine gave back one
-> character of the variable name and matched anyway; _measured 2026-08-16_, `Write-Host
+> character of the variable name and matched anyway; *measured 2026-08-16*, `Write-Host
 > $env:DB_PASSWORD.Length` was denied. A guard that blocks its own remediation advice teaches one
 > lesson only — reach for the override — so this copy strips the provably-safe uses before testing
 > instead. It is the kind of defect no amount of reading finds and one probe finds immediately.
@@ -220,7 +220,7 @@ that agree with each other and disagree with the specification are one wrong gua
 
 ## Files
 
-```
+```text
 COMMAND-SHAPE.md              why how you spell a command decides whether it can be audited
 settings.template.json        a floor to start from -- deny/ask + hooks, no secrets, no allow
 secret-guard.ps1              the PreToolUse guard, PowerShell
@@ -237,7 +237,7 @@ corpus/approved.example.txt   ordinary traffic the floor must not break
 
 Run everything:
 
-```
+```bash
 python test_replay.py && python test_secret_guard.py && python test_template_floor.py
 python check_guard_parity.py        # 0 agree · 1 diverge or wrong · 2 no pwsh, so not measured
 python check_interpreter_parity.py  # needs the full source repository; 2 says so plainly

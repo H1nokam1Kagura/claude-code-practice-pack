@@ -1,4 +1,4 @@
-# Git and review
+﻿# Git and review
 
 Two halves of one problem: deciding **what changed**, and deciding **whether it is right**. Both
 are places where a tool answers confidently and the answer inverts on a detail nobody looked at.
@@ -89,7 +89,7 @@ A guard that degrades loudly is the difference between a known risk and a silent
 
 **What to do about the rest.** Assert the delta, not the exit code:
 
-```
+```text
 after a push    remote ref == local HEAD?
 after a merge   is the content reachable from base?  (content, not ancestry -- see §1)
 before a PR     do both comparisons agree on what this adds?

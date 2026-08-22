@@ -228,6 +228,10 @@ class BuildStep {
     [int]$Count
     [System.Collections.Generic.List[string]]$Findings
     [string]$Note
+    # What Count COUNTS. Every step but one counts files, and the report hardcoded that -- so the step
+    # that counts citation boundaries reported "8 file(s)" for eight entries written into a single
+    # file. A number under the wrong unit is a measurement nobody can check.
+    [string]$Unit
 
     BuildStep([string]$name) {
         $this.Name = $name
@@ -235,6 +239,7 @@ class BuildStep {
         $this.Count = 0
         $this.Findings = [System.Collections.Generic.List[string]]::new()
         $this.Note = ''
+        $this.Unit = 'file(s)'
     }
 
     [void] Fail([string]$msg) {
@@ -421,6 +426,141 @@ function Test-HoldClassTable {
         }
     }
     return $findings
+}
+
+function Import-CitationBoundaries {
+    # THE CITATION BOUNDARIES, loaded fail-closed, from the SAME registry the gate reads. A boundary
+    # is a citation that resolves in this repository and cannot resolve in a distribution: the other
+    # half of a parity comparison, a skill the pack deliberately does not ship. The decision lives in
+    # share-pack.json because it is a decision about the BUNDLE, and it is recorded once.
+    #
+    # Why the builder reads it at all, when for a long time only the gate did: a bundle-boundary
+    # citation was registered as "the gate will report this and we accept it", which made the pack
+    # ship in a state where its own README told a recipient to run tools/Test-PracticeClaims.ps1 and
+    # that run came back FAIL. The registration was real and the reasons were right; it was just
+    # recorded in a file that only the OUTER gate reads, so the knowledge never reached the tree the
+    # recipient holds. Applying it here moves the fact into the bundle instead of describing it from
+    # outside, and the bundle's own gate then polices it in both directions like any other exemption.
+    #
+    # AND WITH NO REGISTRY THIS THROWS, for the reason the hold list throws: zero boundaries applied
+    # is indistinguishable from a pack that had none, and the difference is a distribution that fails
+    # its own documented command. The self-test fixtures pass their boundaries in explicitly, so this
+    # loader is only ever the real build's path.
+    param([string]$GateDir)
+
+    $path = Join-Path $GateDir 'share-pack.json'
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        throw "no share-pack.json in $GateDir -- the build has no register of which citations cannot resolve in a bundle, so it would ship a pack whose own citation gate fails while reporting success"
+    }
+
+    $table = $null
+    try { $table = [System.IO.File]::ReadAllText($path) | ConvertFrom-Json -AsHashtable }
+    catch { throw "share-pack.json does not parse as JSON ($($_.Exception.Message)) -- a boundary register that failed to load applies nothing" }
+    if (-not $table.ContainsKey('bundle_boundary') -or -not $table.bundle_boundary.ContainsKey('citations')) {
+        throw "share-pack.json has no bundle_boundary.citations key -- shape check failed, and a build must not apply nothing by reading nothing"
+    }
+
+    # Shape-checked HERE rather than trusted and discovered later: an entry missing its reason is the
+    # silencer this repository refuses everywhere else, and an entry missing its token would be
+    # applied as an empty exemption that matches every unresolved citation in the pack.
+    $entries = @($table.bundle_boundary.citations)
+    foreach ($e in $entries) {
+        foreach ($k in @('document', 'token', 'reason')) {
+            if (-not $e.ContainsKey($k) -or [string]::IsNullOrWhiteSpace([string]$e[$k])) {
+                throw "share-pack.json bundle_boundary.citations has an entry missing '$k' -- an exemption without a subject or a justification cannot be applied"
+            }
+        }
+    }
+    return $entries
+}
+
+function Merge-PackCitationBoundaries {
+    # Write the registered boundaries into the STAGED external-citations.json, so the pack a recipient
+    # clones carries the same decision the gate made about it.
+    #
+    # Merge-, and deliberately NOT Set-, for the reason script-quality.json already records against
+    # Copy-PackTree: PSUseShouldProcessForStateChangingFunctions demands SupportsShouldProcess on a
+    # Set-* function, and ShouldProcess is the mechanism that lets a writer report success having
+    # written nothing under -WhatIf. This pack previews with -DryRun, uniformly, in every script; a
+    # second preview mechanism in one codebase is worse than a name chosen to avoid needing it. The
+    # verb is honest besides -- entries are merged INTO a registry that already has some, and a
+    # token already present there is a finding rather than an overwrite.
+    #
+    # THE TRANSFORM IS ON THE STAGED COPY ONLY, and it has to be. Adding these to the repository's own
+    # external-citations.json would fail the repository's gate on the spot, and correctly: that
+    # registry's reverse check fails an exemption whose token RESOLVES, and in this repository every
+    # one of these tokens does. The same fact is a live path here and a boundary there, which is
+    # exactly why the two registries were separate in the first place.
+    #
+    # Keyed on TOKEN, because that is what the consuming registry keys on -- the source entries carry
+    # a document as well, and two documents may cite one token, so the reasons are merged rather than
+    # the entry written twice. A duplicate token would otherwise overwrite silently and the second
+    # reason would vanish.
+    param(
+        [string]$PackDir,
+        [object[]]$Boundaries = @(),
+        [switch]$DryRun
+    )
+
+    $rel = 'practice-gate/external-citations.json'
+    $findings = [System.Collections.Generic.List[string]]::new()
+    $applied = [System.Collections.Generic.List[string]]::new()
+
+    if (@($Boundaries).Count -eq 0) {
+        return @{ Applied = $applied; Findings = $findings; File = $rel }
+    }
+
+    $path = Join-Path $PackDir ($rel -replace '/', [System.IO.Path]::DirectorySeparatorChar)
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        $findings.Add("$rel is not in the staged tree, so $(@($Boundaries).Count) registered citation boundary(ies) cannot be applied -- the pack would ship a citation gate that fails on its own documents")
+        return @{ Applied = $applied; Findings = $findings; File = $rel }
+    }
+
+    $reg = $null
+    try { $reg = [System.IO.File]::ReadAllText($path) | ConvertFrom-Json -AsHashtable }
+    catch {
+        $findings.Add("$rel does not parse as JSON ($($_.Exception.Message)) -- the boundaries cannot be applied")
+        return @{ Applied = $applied; Findings = $findings; File = $rel }
+    }
+    if (-not $reg.ContainsKey('entries')) {
+        $findings.Add("$rel has no 'entries' key -- shape check failed, so the boundaries cannot be applied")
+        return @{ Applied = $applied; Findings = $findings; File = $rel }
+    }
+
+    $existing = @{}
+    foreach ($e in @($reg.entries)) { if ($e.ContainsKey('token')) { $existing[[string]$e.token] = $true } }
+
+    $merged = [ordered]@{}
+    foreach ($b in @($Boundaries)) {
+        $tok = [string]$b.token
+        if ($existing.ContainsKey($tok)) {
+            # Already exempt in the repository's own table. Applying it again would write a duplicate
+            # key the consuming gate resolves by last-wins, and would hide the fact that the same
+            # token is now justified twice for two different reasons.
+            $findings.Add("boundary '$tok' is already registered in $rel -- one token, two registries, and the pack cannot say which reason governs; strike it from one of them")
+            continue
+        }
+        $why = "$([string]$b.reason) [Cited in $([string]$b.document). Registered as a bundle boundary in share-pack.json and applied to this distribution by Build-SharePack.ps1; it resolves in the source repository and cannot resolve here.]"
+        if ($merged.Contains($tok)) { $merged[$tok] = "$($merged[$tok])`n`n$why" } else { $merged[$tok] = $why }
+    }
+
+    foreach ($tok in $merged.Keys) {
+        $reg.entries += @{
+            token  = $tok
+            kind   = 'bundle-boundary'
+            root   = 'tools'
+            reason = $merged[$tok]
+        }
+        $applied.Add($tok)
+    }
+
+    if (-not $DryRun -and $applied.Count -gt 0) {
+        # Depth matters: the default of 2 would flatten the entry objects into type names, producing a
+        # registry that parses and exempts nothing.
+        [System.IO.File]::WriteAllText($path, (($reg | ConvertTo-Json -Depth 12) + "`n"))
+    }
+
+    return @{ Applied = $applied; Findings = $findings; File = $rel }
 }
 
 function Get-PackProvenance {
@@ -813,6 +953,11 @@ function Invoke-PackBuild {
         [string]$ExcludeRegex,
         [object[]]$HoldClasses,
         [string]$HoldClassTable,
+        # Passed in rather than loaded here, exactly like the hold classes: the self-test drives this
+        # function with fixture trees that have no practice-gate directory, and a loader inside would
+        # make every fixture build depend on a registry the fixture has no reason to own. The real
+        # build's caller loads it fail-closed through Import-CitationBoundaries.
+        [object[]]$CitationBoundaries = @(),
         [string]$PackProfile,
         [string]$SourceCommit,
         [string[]]$SkipSteps,
@@ -889,7 +1034,7 @@ function Invoke-PackBuild {
     $steps.Add($s1)
 
     if ($s1.Status -ne 'PASS') {
-        foreach ($n in @('OutDir', 'Stage', 'Manifest', 'Verify')) {
+        foreach ($n in @('OutDir', 'Stage', 'Boundaries', 'Manifest', 'Verify')) {
             $s = [BuildStep]::new($n)
             $s.Skip('not run: the source preflight failed, and nothing may be written against sources that did not resolve')
             $steps.Add($s)
@@ -925,7 +1070,7 @@ function Invoke-PackBuild {
     $steps.Add($s2)
 
     if ($s2.Status -eq 'FAIL') {
-        foreach ($n in @('Stage', 'Manifest', 'Verify')) {
+        foreach ($n in @('Stage', 'Boundaries', 'Manifest', 'Verify')) {
             $s = [BuildStep]::new($n)
             $s.Skip('not run: the output directory was refused')
             $steps.Add($s)
@@ -953,7 +1098,7 @@ function Invoke-PackBuild {
     $steps.Add($s3)
 
     if ($s3.Status -ne 'PASS') {
-        foreach ($n in @('Manifest', 'Verify')) {
+        foreach ($n in @('Boundaries', 'Manifest', 'Verify')) {
             $s = [BuildStep]::new($n)
             $s.Skip('not run: staging did not produce a tree to describe')
             $steps.Add($s)
@@ -961,7 +1106,40 @@ function Invoke-PackBuild {
         return $result
     }
 
-    # ---- step 4: the manifest ----------------------------------------------------------------
+    # ---- step 4: the citation boundaries ------------------------------------------------------
+    # Applied AFTER staging and BEFORE the manifest, and the order is not arbitrary. It rewrites the
+    # CONTENT of one already-staged file and adds no path, so the manifest built next describes the
+    # tree as transformed; running it after the manifest would describe a tree that no longer exists.
+    $s3b = [BuildStep]::new('Boundaries')
+    $s3b.Unit = 'boundary(ies)'
+    $bound = Merge-PackCitationBoundaries -PackDir $stage.PackDir -Boundaries $CitationBoundaries -DryRun:$DryRun
+    foreach ($f in $bound.Findings) { $s3b.Fail($f) }
+    $s3b.Count = @($bound.Applied).Count
+    if ($s3b.Status -eq 'PASS') {
+        # Zero is REPORTED, never silent, and zero is legitimate here in a way it is not for staging:
+        # a pack whose documents all cite paths it ships has no boundaries to apply. What makes a real
+        # build's zero safe to trust is that its caller loaded the register fail-closed, so a zero
+        # means the register is empty rather than absent.
+        $s3b.Note = if ($s3b.Count -eq 0) {
+            "no citation boundaries registered -- every citation in the pack is expected to resolve inside it"
+        } else {
+            # -Values, not a pipe: Get-SortedOrdinal takes a parameter and is not pipeline-aware, so
+            # piping into it binds nothing and dies on the null's Count.
+            "$($s3b.Count) boundary(ies) written into $($bound.File): $((Get-SortedOrdinal -Values @($bound.Applied)) -join ', ')"
+        }
+    }
+    $steps.Add($s3b)
+
+    if ($s3b.Status -ne 'PASS') {
+        foreach ($n in @('Manifest', 'Verify')) {
+            $s = [BuildStep]::new($n)
+            $s.Skip('not run: the citation boundaries could not be applied, so the tree is not the one to describe')
+            $steps.Add($s)
+        }
+        return $result
+    }
+
+    # ---- step 5: the manifest ----------------------------------------------------------------
     $manifestPath = Join-Path $OutDir $script:ManifestName
     $result.ManifestPath = $manifestPath
     $s4 = [BuildStep]::new('Manifest')
@@ -986,7 +1164,7 @@ function Invoke-PackBuild {
     }
     $steps.Add($s4)
 
-    # ---- step 5: read it back ----------------------------------------------------------------
+    # ---- step 6: read it back ----------------------------------------------------------------
     $s5 = [BuildStep]::new('Verify')
     if ($DryRun) { $s5.Skip('dry run -- there is no tree to read back') }
     elseif ($SkipSteps -contains 'Verify') {
@@ -1118,6 +1296,71 @@ function Invoke-BuildSelfTest {
         # Counted apart. Collapsing the two counters would make "withheld nothing" and "the pattern
         # stopped matching" the same output.
         if (-not (Assert-Case 'non-content and held-back are counted separately' '0' "$($st.Excluded)")) { $failures++ }
+
+        # ── the citation boundaries ───────────────────────────────────────────────
+        # The negative controls matter more than the positive one here, because every failure mode of
+        # this step is a pack that builds green and then fails its own documented command in the
+        # recipient's hands.
+        $cb = Join-Path $tmp 'cb'
+        $null = New-Item -ItemType Directory -Path (Join-Path $cb 'tools/practice-gate') -Force
+        $cbReg = Join-Path $cb 'tools/practice-gate/external-citations.json'
+        [System.IO.File]::WriteAllText($cbReg, '{ "entries": [ { "token": "already/here.md", "kind": "illustrative", "root": "tools", "reason": "pre-existing" } ] }')
+        $cbFx = @(@{ document = 'tools/a.md'; token = 'skills/x/SKILL.md'; reason = 'self-test fixture' })
+
+        $res = Merge-PackCitationBoundaries -PackDir (Join-Path $cb 'tools') -Boundaries $cbFx
+        if (-not (Assert-Case 'a registered boundary is applied to the staged registry' '1' "$(@($res.Applied).Count)")) { $failures++ }
+        if (-not (Assert-Case '...with no findings' '0' "$(@($res.Findings).Count)")) { $failures++ }
+        $after = [System.IO.File]::ReadAllText($cbReg) | ConvertFrom-Json -AsHashtable
+        if (-not (Assert-Case '...and it is really on disk, beside the entry that was there' '2' "$(@($after.entries).Count)")) { $failures++ }
+        $new = @($after.entries | Where-Object { $_.token -eq 'skills/x/SKILL.md' })
+        # A reason is what stops an exemption being a silencer, and the CONSUMING gate fails an entry
+        # that has none -- so an applied entry without one would ship a registry that cannot load.
+        if (-not (Assert-Case '...carrying a reason the consuming gate will accept' 'True' "$(-not [string]::IsNullOrWhiteSpace([string]$new[0].reason))")) { $failures++ }
+        if (-not (Assert-Case '...and the citing document, so the reason names its subject' 'True' "$([string]$new[0].reason -like '*tools/a.md*')")) { $failures++ }
+        # root: tools, or the consuming registry's reverse check cannot scope it and a scoped run
+        # would call the entry dead.
+        if (-not (Assert-Case '...and a declared root' 'tools' "$([string]$new[0].root)")) { $failures++ }
+
+        # Zero boundaries is legitimate and must not write, so a pack with nothing to apply is not
+        # rewritten into a different pack.
+        $before = [System.IO.File]::ReadAllText($cbReg)
+        $res = Merge-PackCitationBoundaries -PackDir (Join-Path $cb 'tools') -Boundaries @()
+        if (-not (Assert-Case 'no boundaries applies nothing' '0' "$(@($res.Applied).Count)")) { $failures++ }
+        if (-not (Assert-Case '...and does not touch the file' 'True' "$($before -eq [System.IO.File]::ReadAllText($cbReg))")) { $failures++ }
+
+        # THE COLLISION. One token justified in two registries is a pack that cannot say which reason
+        # governs, and last-wins would hide it.
+        $dup = @(@{ document = 'tools/a.md'; token = 'already/here.md'; reason = 'self-test fixture' })
+        $res = Merge-PackCitationBoundaries -PackDir (Join-Path $cb 'tools') -Boundaries $dup
+        if (-not (Assert-Case 'a boundary already exempt in the repository table is a finding' 'True' "$(@($res.Findings).Count -gt 0)")) { $failures++ }
+        if (-not (Assert-Case '...and is NOT applied on top of it' '0' "$(@($res.Applied).Count)")) { $failures++ }
+
+        # A missing registry must FAIL rather than apply nothing quietly: applying nothing is exactly
+        # the state that shipped a distribution whose own citation gate failed.
+        $cbEmpty = Join-Path $tmp 'cb-empty'
+        $null = New-Item -ItemType Directory -Path (Join-Path $cbEmpty 'tools') -Force
+        $res = Merge-PackCitationBoundaries -PackDir (Join-Path $cbEmpty 'tools') -Boundaries $cbFx
+        if (-not (Assert-Case 'boundaries registered but no registry staged is a finding' 'True' "$(@($res.Findings).Count -gt 0)")) { $failures++ }
+
+        # -DryRun previews without writing, like every other step.
+        $cbDry = Join-Path $tmp 'cb-dry'
+        $null = New-Item -ItemType Directory -Path (Join-Path $cbDry 'tools/practice-gate') -Force
+        $dryReg = Join-Path $cbDry 'tools/practice-gate/external-citations.json'
+        [System.IO.File]::WriteAllText($dryReg, '{ "entries": [] }')
+        $before = [System.IO.File]::ReadAllText($dryReg)
+        $res = Merge-PackCitationBoundaries -PackDir (Join-Path $cbDry 'tools') -Boundaries $cbFx -DryRun
+        if (-not (Assert-Case '-DryRun reports what it would apply' '1' "$(@($res.Applied).Count)")) { $failures++ }
+        if (-not (Assert-Case '...and writes nothing' 'True' "$($before -eq [System.IO.File]::ReadAllText($dryReg))")) { $failures++ }
+
+        # The loader, fail-closed in both of its shapes.
+        $gd = Join-Path $tmp 'cb-gate'; $null = New-Item -ItemType Directory -Path $gd -Force
+        $threw = 'no'
+        try { $null = Import-CitationBoundaries -GateDir $gd } catch { $threw = 'yes' }
+        if (-not (Assert-Case 'no share-pack.json throws rather than applying nothing' 'yes' $threw)) { $failures++ }
+        [System.IO.File]::WriteAllText((Join-Path $gd 'share-pack.json'), '{ "bundle_boundary": { "checks": [], "citations": [ { "document": "tools/a.md", "token": "x.md" } ] } }')
+        $threw = 'no'
+        try { $null = Import-CitationBoundaries -GateDir $gd } catch { $threw = 'yes' }
+        if (-not (Assert-Case 'a boundary with no reason throws -- an exemption nobody justified' 'yes' $threw)) { $failures++ }
 
         # A class that has stopped matching its own example withholds nothing, and a pack built with
         # one looks exactly like a pack with nothing to withhold. The build must not run.
@@ -1485,6 +1728,17 @@ catch {
     exit 1
 }
 
+# Loaded in the same breath as the hold list and failing the same way, because the two registries
+# answer the same kind of question about the same artifact: where does this distribution deliberately
+# differ from its source. One withholds files; the other carries a decision about citations into the
+# tree instead of describing it from outside.
+$boundaries = @()
+try { $boundaries = @(Import-CitationBoundaries -GateDir $GateDir) }
+catch {
+    Write-Host "ENVIRONMENT: $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
+}
+
 if (-not $OutDir) {
     # No default destination, on purpose. Every candidate default is wrong in a way that is hard to
     # notice: a path inside the repository puts an unversioned tree where `git status` will start
@@ -1500,6 +1754,7 @@ if (-not $OutDir) {
 
 $build = Invoke-PackBuild -PackRoot $PackRoot -SourceRoot $SourceRoot -OutDir $OutDir -Prefix $Prefix `
     -ExcludeRegex $ExcludeRegex -HoldClasses @($holdTable.Classes) -HoldClassTable $holdTable.File `
+    -CitationBoundaries $boundaries `
     -PackProfile $PackProfile -SourceCommit $SourceCommit `
     -SkipSteps $Skip -Force ([bool]$Force) -DryRun ([bool]$DryRun)
 
@@ -1516,7 +1771,7 @@ foreach ($s in $build.Steps) {
     $colour = switch ($s.Status) {
         'PASS' { 'Green' } 'FAIL' { 'Red' } 'INCONCLUSIVE' { 'Red' } 'SKIPPED' { 'Yellow' } default { 'Gray' }
     }
-    Write-Host ("{0,-10} {1,-13} {2,5} file(s){3}" -f $s.Name, $s.Status, $s.Count, $(if ($s.Note) { "  -- $($s.Note)" } else { '' })) -ForegroundColor $colour
+    Write-Host ("{0,-10} {1,-13} {2,5} {4}{3}" -f $s.Name, $s.Status, $s.Count, $(if ($s.Note) { "  -- $($s.Note)" } else { '' }), $s.Unit) -ForegroundColor $colour
     foreach ($f in $s.Findings) { Write-Host "             - $f" -ForegroundColor $colour }
 }
 

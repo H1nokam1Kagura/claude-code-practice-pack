@@ -1,4 +1,4 @@
-# Reversibility
+﻿# Reversibility
 
 How to make a destructive operation safe to run. Not "careful" — *reversible*, which is a property
 of the design rather than of the operator's attention.
@@ -12,7 +12,7 @@ of the design rather than of the operator's attention.
 
 Every mutating operation on this stack takes the same form. Skipping a step is the finding.
 
-```
+```text
 dry-run  →  execute  →  verify  →  rollback-by-run-id
 ```
 
@@ -36,7 +36,7 @@ stopped.
 
 It has to be tested, not asserted. The pattern used throughout this repo:
 
-```
+```text
 run once  → N changes
 run again → 0 changes, and the artifact is byte-identical
 ```
@@ -65,7 +65,7 @@ fold that follows. Verified failing-then-passing on 2026-08-07, while backing up
 this document's own lessons live in: 1 entry from a junctioned directory versus 534 from the
 canonical one.
 
-```
+```bash
 tar -tzf backup.tgz | wc -l          # what the archive actually contains
 ls <source>/*.md | wc -l             # what it should contain
 # the two must agree

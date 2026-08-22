@@ -1,4 +1,4 @@
-# Testing discipline
+﻿# Testing discipline
 
 What makes a test worth having. Every example is a real test in this repo, not an invention — the
 paths are there so you can check the claim.
@@ -17,7 +17,7 @@ violate it from every direction at once.
 
 `skills/build-compliance/scripts/test_scan.py`:
 
-```
+```text
 test_no_credential_survives_into_a_serialised_finding
     "The control: a planted secret must not reach findings.json by ANY field."
 ```
@@ -32,7 +32,7 @@ absent from the whole output.**
 
 A second in the same file:
 
-```
+```text
 test_every_control_cited_by_a_check_exists_in_the_catalog
     "A finding may cite only a control the catalog defines."
 ```
@@ -48,7 +48,7 @@ side would see.
 When something breaks in a way that read as obviously correct beforehand, the fix is not the
 lesson — the **test** is. `tools/claude-permission-toolkit/test_replay.py`:
 
-```
+```python
 class TestKnownWorkflowBreakers(unittest.TestCase):
     """Four rules that read as obviously correct and each broke a real workflow.
 

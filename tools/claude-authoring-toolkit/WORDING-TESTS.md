@@ -77,7 +77,7 @@ The metric is a count of fourteen fixed strings in the response — deterministi
 someone who does not trust us. A model scoring model output would put the measurement and its
 subject in the same family, and the first thing a wording change would move is the judge.
 
-_Measured 2026-08-17, seven reps per arm, one model held constant across arms._
+*Measured 2026-08-17, seven reps per arm, one model held constant across arms.*
 
 | arm | counts | median | range |
 |---|---|---|---|

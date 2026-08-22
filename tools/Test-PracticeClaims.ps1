@@ -315,8 +315,60 @@ function Import-Registry {
 }
 
 function Get-RelPath {
+    # Make a path relative to a root, for a finding somebody has to act on. It used to assume the
+    # file was UNDER the root and did a bare Substring($Root.Length) on that assumption. When the
+    # assumption held it was right; when it did not it failed two ways, and only one of them was
+    # visible:
+    #
+    #   * root LONGER than the path  -> Substring throws, and the gate's own -SelfTest died on it.
+    #     This is what a long checkout path produces.
+    #   * root SHORTER but the path not under it -> NO error, and a plausible-looking wrong answer.
+    #     Measured: FullName 'C:/Temp/selftest-abc/dirty/x.ps1' against Root 'D:/a/ggo/ggo' returned
+    #     'test-abc/dirty/x.ps1' -- a path that names no file, in a finding that reads as precise.
+    #     This is the case a SHORT checkout path produces, which is why the hosted runner has been
+    #     reporting self-test findings against sliced paths and passing.
+    #
+    # Both are the same missing check. A path that is not under the root has no relative form, so
+    # this now says so by returning the full path rather than inventing one.
     param([string]$FullName, [string]$Root)
-    return $FullName.Substring($Root.Length).TrimStart('\', '/') -replace '\\', '/'
+
+    if ([string]::IsNullOrEmpty($FullName)) { return '' }
+    if ([string]::IsNullOrEmpty($Root)) { return $FullName -replace '\\', '/' }
+
+    # Normalise both sides before comparing: 'C:\r\.\a' and 'C:\r\a' are the same file, and a
+    # comparison that says otherwise sends the caller a full path for a file that IS under the root.
+    try {
+        $full = [System.IO.Path]::GetFullPath($FullName)
+        $base = [System.IO.Path]::GetFullPath($Root)
+    }
+    catch {
+        # A malformed path is the caller's problem to see, not this function's to hide behind a
+        # throw. Fall back to the raw strings, explicitly -- an empty catch would leave $full and
+        # $base unset here and turn a bad path into a confusing null reference further down.
+        $full = $FullName
+        $base = $Root
+    }
+    $base = $base.TrimEnd('\', '/')
+
+    # Case-insensitively on Windows and case-sensitively elsewhere, because that is what the two
+    # filesystems actually do -- folding case on Linux would strip a prefix off a DIFFERENT directory
+    # whose name differs only in case, which is legal there.
+    #
+    # DirectorySeparatorChar, NOT $IsWindows: this file carries no '#requires -Version 7', and
+    # $IsWindows does not exist in 5.1, where it reads as $null and would silently select the
+    # case-SENSITIVE comparison on a case-insensitive filesystem. The separator is the same test and
+    # exists in both. It calls macOS case-sensitive, which it usually is not -- and that error is in
+    # the safe direction: it returns a full path where a relative one would have done, rather than
+    # stripping a prefix off a directory that only looked like the root.
+    $cmp = if ([System.IO.Path]::DirectorySeparatorChar -eq '\') { [System.StringComparison]::OrdinalIgnoreCase } else { [System.StringComparison]::Ordinal }
+
+    if ($full.Equals($base, $cmp)) { return '' }
+    foreach ($sep in @('\', '/')) {
+        if ($full.StartsWith($base + $sep, $cmp)) {
+            return $full.Substring($base.Length).TrimStart('\', '/') -replace '\\', '/'
+        }
+    }
+    return $full -replace '\\', '/'
 }
 
 # ONE extractor, two consumers: check A asks whether each citation RESOLVES, check E asks whether a
@@ -370,11 +422,27 @@ function Get-CitationTokens {
     # mapping both spell themselves with one. There is no file at the end of any of them. Eleven
     # of these surfaced the moment the gate read skills/, across four skills, which is the point
     # at which registering them one by one stops being a decision and starts being a ritual.
+    #   dir/            a TRAILING SLASH defeated the bare-extension rule above. `.signatures/`
+    #                   is the same non-citation as `.signatures`, but the shape test ran before
+    #                   anything trimmed it, so the slash carried it straight through a rule
+    #                   written to stop it. Normalise first, then test -- otherwise the exclusion
+    #                   holds only for whichever of the two spellings the author happened to use.
+    #   path/.          an ELISION, not a path. `/Workspace/Users/.` and `/Workspace/invest-mcp/...`
+    #                   (and the U+2026 single-character spelling) are an author trailing off
+#                   mid-path, and no file can ever be at the end of
+    #                   one. Same case as the bare extension and stated the same way: a defect in
+    #                   the shape test, not a decision for the registry, because an exemption would
+    #                   imply there is an artifact to find.
     return , [string[]]@(
-        $tokens | Where-Object {
-            $_ -notmatch '[<>]' -and $_ -notmatch '^~/' -and
-            $_ -notmatch '^\.claude/' -and $_ -notmatch '^origin/' -and
-            $_ -notmatch '^\.[A-Za-z0-9]+$' -and $_ -notmatch '^\$'
+        $tokens | ForEach-Object { $_.TrimEnd('/') } | Where-Object {
+            # Anchored ($|/) rather than '/', because the normalisation above strips a trailing
+            # slash and `~/` would otherwise arrive here as `~` and miss a rule written for it.
+            # Normalising inputs and anchoring rules on the un-normalised spelling is how the
+            # bare-extension rule came to be defeated by `.signatures/` in the first place.
+            $_ -notmatch '[<>]' -and $_ -notmatch '^~($|/)' -and
+            $_ -notmatch '^\.claude($|/)' -and $_ -notmatch '^origin($|/)' -and
+            $_ -notmatch '^\.[A-Za-z0-9]+$' -and $_ -notmatch '^\$' -and
+            $_ -notmatch '(^|/)(\.{1,3}|…)$'
         })
 }
 
@@ -382,6 +450,43 @@ function Get-CitationTokens {
 # A citation is a backticked token that is path-shaped (contains /) or names a script (.py/.ps1),
 # plus every relative markdown link target. Globs, permission-rule syntax and bare generic
 # filenames are deliberately NOT citations: they name a shape, not an artifact.
+
+# A command form is a FLATTENED copy of a bundled skill: `commands/okr.md` is the same document
+# as `skills/okr-investment-review/SKILL.md`, minus the directory around it. So a bundle-relative
+# citation like `references/scoring-calibration.md` resolves beside the SKILL.md and CANNOT resolve
+# beside the flat copy -- through no fault of the citation, which names a file this repository
+# ships. Registering those would be recording a decision about a file that is right there; the
+# honest fix is to look where the bundle is. Returns $null for anything that is not a top-level
+# command file, so every other root keeps the old resolution exactly.
+#
+# Twin by directory name first, then by the frontmatter `name` -- the alias forms (commands/okr.md
+# -> skills/okr-investment-review/) resolve only the second way, and the same two-step lives in
+# .github/scripts/_skill_forms.py for the parity gates. Two implementations of one rule is a cost;
+# it is paid here rather than shelling from PowerShell into Python inside a per-file loop.
+function Get-TwinBundleDir {
+    param([System.IO.FileInfo]$File, [string]$RepoRoot)
+
+    # Get-RelPath already normalises separators to '/', so no second replace here.
+    $rel = Get-RelPath -FullName $File.FullName -Root $RepoRoot
+    if ($rel -notmatch '^commands/[^/]+\.md$') { return $null }
+
+    $stem = [System.IO.Path]::GetFileNameWithoutExtension($File.Name)
+    $direct = Join-Path $RepoRoot "skills/$stem"
+    if (Test-Path -LiteralPath $direct) { return $direct }
+
+    $lines = Read-Lines -Path $File.FullName
+    if ($lines.Count -gt 0 -and $lines[0].Trim() -eq '---') {
+        for ($j = 1; $j -lt $lines.Count; $j++) {
+            if ($lines[$j].Trim() -eq '---') { break }
+            if ($lines[$j] -match '^name:\s*(\S+)\s*$') {
+                $alias = Join-Path $RepoRoot "skills/$($Matches[1])"
+                if (Test-Path -LiteralPath $alias) { return $alias }
+                break
+            }
+        }
+    }
+    return $null
+}
 
 function Test-Citations {
     param([string]$Root, [string]$RepoRoot, [hashtable]$Registry)
@@ -426,6 +531,7 @@ function Test-Citations {
     foreach ($file in Get-ScanFiles -Root $Root -Extensions @('.md')) {
         $rel = Get-RelPath -FullName $file.FullName -Root $RepoRoot
         $lines = Read-Lines -Path $file.FullName
+        $twinDir = Get-TwinBundleDir -File $file -RepoRoot $RepoRoot
         for ($i = 0; $i -lt $lines.Count; $i++) {
             $line = $lines[$i]
             $tokens = Get-CitationTokens -Line $line
@@ -441,6 +547,8 @@ function Test-Citations {
                 if (Test-Path -LiteralPath (Join-Path $file.DirectoryName $clean)) { $resolved = $true }
                 # relative to the repository root
                 elseif (Test-Path -LiteralPath (Join-Path $RepoRoot $clean)) { $resolved = $true }
+                # relative to the skill bundle this flat command form was flattened from
+                elseif ($twinDir -and (Test-Path -LiteralPath (Join-Path $twinDir $clean))) { $resolved = $true }
                 # bare script name, anywhere in the repository
                 elseif ($clean -notmatch '/' -and $byName.ContainsKey($clean)) { $resolved = $true }
 
@@ -1664,6 +1772,29 @@ function Invoke-SelfTest {
     Write-Host "`nSELF-TEST -- negative controls" -ForegroundColor Cyan
 
     try {
+        # 0. Get-RelPath, which every finding in this file is addressed with. It had no controls, and
+        #    the two it needed most are the two it got wrong: a root that is longer than the path
+        #    (throws, and killed this whole self-test) and a path that is not under the root at all
+        #    (returned a slice of the path, silently, and a finding cited a file that does not exist).
+        #    Case 3 is the one that made it look fine on a hosted runner, where the checkout path is
+        #    short enough that the slice never went out of bounds.
+        $sep = [System.IO.Path]::DirectorySeparatorChar
+        $rootA = [System.IO.Path]::GetFullPath((Join-Path $tmp 'relpath'))
+        $underA = [System.IO.Path]::GetFullPath((Join-Path $rootA 'a/b.md'))
+        if (-not (Assert-Case 'Get-RelPath: a file under the root is relative to it' 'a/b.md' (Get-RelPath -FullName $underA -Root $rootA))) { $failures++ }
+        if (-not (Assert-Case '...a trailing separator on the root changes nothing' 'a/b.md' (Get-RelPath -FullName $underA -Root ($rootA + $sep)))) { $failures++ }
+        if (-not (Assert-Case '...the root itself is the empty relative path' '' (Get-RelPath -FullName $rootA -Root $rootA))) { $failures++ }
+        # The regression that mattered: NOT under the root, root SHORTER. It must not invent a path.
+        $outside = 'C:/Temp/selftest-abc/dirty/x.ps1'
+        $sliced = 'test-abc/dirty/x.ps1'
+        $got = Get-RelPath -FullName $outside -Root 'D:/a/ggo/ggo'
+        if (-not (Assert-Case 'Get-RelPath: a path outside the root is NOT sliced into a fiction' 'False' "$($got -eq $sliced)")) { $failures++ }
+        if (-not (Assert-Case '...it is returned whole, so the finding names a real file' 'True' "$($got -like '*Temp/selftest-abc/dirty/x.ps1')")) { $failures++ }
+        # ...and root LONGER than the path, which used to throw and take the self-test with it.
+        $threw = 'no'
+        try { $null = Get-RelPath -FullName 'C:/T/x.ps1' -Root 'D:/a/very/long/checkout/path/here' } catch { $threw = 'yes' }
+        if (-not (Assert-Case 'Get-RelPath: a root longer than the path does not throw' 'no' $threw)) { $failures++ }
+
         # 1. an empty scope must be INCONCLUSIVE, never PASS. This is the case the whole exit
         #    contract exists for: zero findings and zero candidates are not the same result.
         $empty = Join-Path $tmp 'empty'; $null = New-Item -ItemType Directory -Path $empty -Force
@@ -1844,6 +1975,66 @@ function Invoke-SelfTest {
         $reg = @{ entries = @(@{ token = 'tools/nope/missing_file.py' }) }
         $res = Test-Citations -Root $cite -RepoRoot $RepoRoot -Registry $reg
         if (-not (Assert-Case 'exemption with no reason fails' 'FAIL' $res.Status)) { $failures++ }
+
+        # 4e. A TRAILING SLASH MUST NOT DEFEAT THE BARE-EXTENSION RULE. `.signatures` was already
+        #     excluded by shape; `.signatures/` sailed through the same rule because the shape test
+        #     ran before anything trimmed the slash. Two spellings of one non-citation, one of them
+        #     a finding. Asserted on the slashed form alone -- the bare form already passes, and
+        #     would mask a rule that only ever matched it.
+        $shape = Join-Path $tmp 'shape'; $null = New-Item -ItemType Directory -Path $shape -Force
+        [System.IO.File]::WriteAllText((Join-Path $shape 'd.md'), "Exclude ``.signatures/`` from the package. See ``tools/Test-PracticeClaims.ps1``.`n")
+        $reg = @{ entries = @() }
+        $res = Test-Citations -Root $shape -RepoRoot $RepoRoot -Registry $reg
+        if (-not (Assert-Case 'a trailing slash does not defeat the extension rule' 'PASS' $res.Status)) { $failures++ }
+
+        # 4f. AN ELISION IS NOT A CITATION, in both spellings. `/Workspace/Users/…` is an author
+        #     trailing off mid-path; no file can ever sit at the end of one, so registering it
+        #     would imply there is an artifact to find. Both the ASCII and U+2026 forms, because
+        #     the one in commands/oauth.md is the single character and a rule written for three
+        #     dots misses it silently.
+        [System.IO.File]::WriteAllText((Join-Path $shape 'd.md'),
+            "The app still holds CAN_MANAGE on ``/Workspace/Users/…`` and on ``/Workspace/invest-mcp/...`` too. See ``tools/Test-PracticeClaims.ps1``.`n")
+        $res = Test-Citations -Root $shape -RepoRoot $RepoRoot -Registry $reg
+        if (-not (Assert-Case 'an elided path is not a citation, either spelling' 'PASS' $res.Status)) { $failures++ }
+        Remove-Item -LiteralPath (Join-Path $shape 'd.md') -Force
+
+        # 4g. A FLAT COMMAND FORM RESOLVES AGAINST ITS SKILL BUNDLE. `commands/okr.md` is
+        #     `skills/okr-investment-review/SKILL.md` with the directory taken away, so
+        #     `references/scoring-calibration.md` names a file this repository ships and cannot
+        #     resolve beside the flat copy. Four controls, because a resolution rule that only ever
+        #     passes is indistinguishable from no rule: by directory name, by frontmatter alias,
+        #     the negative when the bundle really lacks the file, and the proof that no OTHER root
+        #     gained a second place to look.
+        $tr = Join-Path $tmp 'twinrepo'
+        $null = New-Item -ItemType Directory -Path (Join-Path $tr 'commands') -Force
+        $null = New-Item -ItemType Directory -Path (Join-Path $tr 'skills/thing/references') -Force
+        [System.IO.File]::WriteAllText((Join-Path $tr 'commands/thing.md'), "See ``references/x.md``.`n")
+        [System.IO.File]::WriteAllText((Join-Path $tr 'skills/thing/references/x.md'), "x`n")
+        $res = Test-Citations -Root (Join-Path $tr 'commands') -RepoRoot $tr -Registry $reg
+        if (-not (Assert-Case 'bundle-relative citation resolves via the same-name twin' 'PASS' $res.Status)) { $failures++ }
+
+        $null = New-Item -ItemType Directory -Path (Join-Path $tr 'skills/long-name/references') -Force
+        [System.IO.File]::WriteAllText((Join-Path $tr 'commands/alias.md'),
+            "---`nname: long-name`n---`n`nSee ``references/y.md``.`n")
+        [System.IO.File]::WriteAllText((Join-Path $tr 'skills/long-name/references/y.md'), "y`n")
+        $res = Test-Citations -Root (Join-Path $tr 'commands') -RepoRoot $tr -Registry $reg
+        if (-not (Assert-Case '...and via the frontmatter name for an alias form' 'PASS' $res.Status)) { $failures++ }
+
+        # The negative. Same shape, but the bundle does not have it -- this must still be a finding,
+        # or the rule is a blanket pass for anything under commands/.
+        [System.IO.File]::WriteAllText((Join-Path $tr 'commands/thing.md'), "See ``references/absent.md``.`n")
+        $res = Test-Citations -Root (Join-Path $tr 'commands') -RepoRoot $tr -Registry $reg
+        if (-not (Assert-Case 'a bundle-relative citation the bundle lacks still fails' 'FAIL' $res.Status)) { $failures++ }
+        Remove-Item -LiteralPath (Join-Path $tr 'commands/thing.md') -Force
+        Remove-Item -LiteralPath (Join-Path $tr 'commands/alias.md') -Force
+
+        # ...and no other root gained a fallback: the twin lookup returns $null unless the citing
+        # file is a top-level command file, so a skills/ document citing a file its own bundle
+        # lacks is still a finding.
+        $null = New-Item -ItemType Directory -Path (Join-Path $tr 'skills/other') -Force
+        [System.IO.File]::WriteAllText((Join-Path $tr 'skills/other/SKILL.md'), "See ``references/x.md``.`n")
+        $res = Test-Citations -Root (Join-Path $tr 'skills') -RepoRoot $tr -Registry $reg
+        if (-not (Assert-Case 'the twin fallback applies to commands/ only' 'FAIL' $res.Status)) { $failures++ }
 
         # 5. an undated figure must fail, and the same figure dated must pass
         $fig = Join-Path $tmp 'fig'; $null = New-Item -ItemType Directory -Path $fig -Force
@@ -2722,8 +2913,22 @@ if ($failed.Count -gt 0) {
     $exit = 1
 }
 elseif ($skipped.Count -gt 0) {
-    Emit "RESULT: SKIPPED -- $($skipped.Count) check(s) deliberately not run; the rest passed." 'Yellow'
-    Emit "        This is not a pass. Re-run without -Skip before trusting it." 'Yellow'
+    # SKIPPED has two causes and they need different advice. The banner used to name only one of
+    # them -- "Re-run without -Skip" -- which is unactionable nonsense to the reader who passed no
+    # -Skip at all. A recipient running this against a DISTRIBUTION is exactly that reader: checks
+    # whose subject the pack does not ship report SKIPPED on their own, and telling that person to
+    # drop a flag they never typed reads as the tool not knowing what it did.
+    #
+    # Reported in run order, matching the per-check lines above rather than re-sorting them.
+    $bySkipFlag = @($skipped | Where-Object { $Skip -contains $_.Name })
+    $selfSkipped = @($skipped | Where-Object { $Skip -notcontains $_.Name })
+    Emit "RESULT: SKIPPED -- $($skipped.Count) check(s) did not run; the rest passed. A skip is never a pass." 'Yellow'
+    if ($bySkipFlag.Count -gt 0) {
+        Emit "        $($bySkipFlag.Count) suppressed by -Skip: $(($bySkipFlag | ForEach-Object { $_.Name }) -join ', ') -- re-run without it before trusting this." 'Yellow'
+    }
+    if ($selfSkipped.Count -gt 0) {
+        Emit "        $($selfSkipped.Count) could not apply to this tree: $(($selfSkipped | ForEach-Object { $_.Name }) -join ', ') -- each says why on its own line above." 'Yellow'
+    }
     $exit = 2
 }
 elseif ($Only.Count -gt 0) {

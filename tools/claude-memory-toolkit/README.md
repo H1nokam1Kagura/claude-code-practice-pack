@@ -1,4 +1,4 @@
-# claude-memory-toolkit
+﻿# claude-memory-toolkit
 
 A tiny, stdlib-only toolkit for **managing Claude Code auto-memory at scale** — so that when the
 index outgrows what loads, the part left behind is the part you could afford to lose.
@@ -138,7 +138,7 @@ Filenames are `feedback_*.md`, `project_*.md`, `reference_*.md` under your memor
 
 **Quick install (recommended):** unzip, then from the folder run:
 
-```
+```bash
 python install.py
 ```
 

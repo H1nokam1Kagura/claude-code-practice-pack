@@ -14,15 +14,18 @@ paths:
 > judgment call that misses silently).
 
 ## Idempotency keys are mandatory on every write
+
 Every payment write carries a client-generated idempotency key; retries reuse the SAME key or you
 double-charge. Derive it from the order id + attempt-invariant fields — never a per-attempt uuid
 or timestamp.
 
 ## Never log full PANs / CVV
+
 Card numbers are truncated to last-4 before any log/trace/metric. The linter allows-lists the
 `redact_card()` helper; raw card fields must not reach `logger.*`.
 
 ## Verify the side effect, don't trust the 200
+
 The gateway returns `200` on accepted-but-async captures. Confirm the capture landed
 (`GET /charges/{id}` state == `captured`) before marking the order paid — a `200` alone is not
 settlement.

@@ -1,4 +1,4 @@
----
+﻿---
 name: reversibility-before-destructive
 description: >
   Make an operation that deletes, overwrites or bulk-writes safe to run, by design rather than by
@@ -54,7 +54,7 @@ argument, with the incidents behind each rule, is `tools/claude-dev-practice/REV
 
 Every mutating operation takes the same form, and skipping a step is itself the finding.
 
-```
+```text
 dry-run  ->  execute  ->  verify  ->  rollback by run identifier
 ```
 

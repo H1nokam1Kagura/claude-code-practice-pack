@@ -1,4 +1,4 @@
-# Command shape
+﻿# Command shape
 
 **How you spell a command decides whether anyone can ever audit it.** That reads like style advice.
 It is not: it falls directly out of the matching model in `replay_permissions.py`, and it is the
@@ -72,7 +72,7 @@ you cannot read, and a list the size of the one measured above is not a thing an
 ## The check
 
 There is no script for this one, and that is worth stating rather than leaving you to notice.
-Command shape is a property of how commands are *authored*, and the artifact it damages — an
+Command shape is a property of how commands are _authored_, and the artifact it damages — an
 accumulating local settings file — is the same artifact `replay_permissions.py` treats as a corpus.
 
 So measure it the indirect way: run your accumulated approvals through the replay validator and read
@@ -80,6 +80,6 @@ the **NOT EXERCISED** section. A rule that never fires, in a corpus drawn from y
 usually a rule shaped like a command that could not recur. Count how many. That number is this
 document's real metric.
 
-```
+```bash
 python replay_permissions.py --candidate settings.template.json --corpus your-settings.local.json
 ```

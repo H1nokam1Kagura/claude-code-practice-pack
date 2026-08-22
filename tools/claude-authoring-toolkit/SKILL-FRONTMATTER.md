@@ -1,4 +1,4 @@
-# SKILL-FRONTMATTER.md
+﻿# SKILL-FRONTMATTER.md
 
 The contract for the top of a `SKILL.md`, why each field is there, and the two checks that
 keep it from becoming decoration.
@@ -21,7 +21,7 @@ when the listing overflows, entries are shortened: descriptions get **dropped**,
 the skills you invoke least. A skill can therefore be present, correctly written, and
 *invisible*, because its description was the one cut to make room. Separately, each entry's
 combined description text is truncated at 1,536 characters regardless of budget. Both figures
-are configurable, and both are the platform's, not yours. _Verified 2026-08-16._
+are configurable, and both are the platform's, not yours. *Verified 2026-08-16.*
 
 So the budget in `skill-schema.json` is deliberately **tighter than the platform's cap and
 labelled a convention**, not a limit. A number you set and can defend is worth more than a
@@ -100,7 +100,7 @@ structure, not the example. So the chokepoint it names, redact(), and the test i
 test_redaction.py, belong to that imagined tool — neither exists in this toolkit, and what is
 being demonstrated is the *shape* of the citation rather than the citation itself:
 
-```
+```yaml
   risk_tier: 2
   risk_factors: >
     Read-only across dashboards and logs; it recommends a page but never sends one, so the
@@ -154,7 +154,7 @@ measures that, and a green run must not be read as though it did.
 
 ## Files
 
-```
+```text
 skill-schema.json        the contract, as data -- profiles, required fields, the budget you set
 SKILL-FRONTMATTER.md     this file; gated against the schema by the lint's self-test
 lint_skills.py           holds a tree to the contract, incl. --self-test

@@ -46,6 +46,54 @@
       "kind": "illustrative",
       "root": "tools",
       "reason": "Part of the invented repository state the compliance experiment hands the model -- a file edited then partly reverted, so it imports both the old and new name. It reaches COMPLIANCE-TESTS.md only inside VERBATIM QUOTES of the model's own responses, which are the measurement's raw evidence and must not be reworded to satisfy a gate. The fixture is deliberately fictional: a real path would make the control's behaviour depend on a tree the control cannot see."
+    },
+    {
+      "root": "tools",
+      "kind": "bundle-boundary",
+      "token": ".github/scripts/lint_skills.py",
+      "reason": "The repository-side lint that the shipped schema is gated AGAINST. It is the other half of a parity comparison, so the sentence is about a file that is deliberately outside the pack; rewriting it to the shipped copy would make the paragraph describe a gate comparing a file with itself. [Cited in tools/claude-authoring-toolkit/README.md. Registered as a bundle boundary in share-pack.json and applied to this distribution by Build-SharePack.ps1; it resolves in the source repository and cannot resolve here.]"
+    },
+    {
+      "root": "tools",
+      "kind": "bundle-boundary",
+      "token": "scan.py",
+      "reason": "Named bare, in the compliance narrative. It resolves in this repository under skills/build-compliance/scripts/ and lands in the pack at compliance/ under build order 9, so this entry is transitional: the assembly step rewrites the citation, and this check then fails as stale, which is the moment to strike it. [Cited in tools/claude-dev-practice/CODING-WITH-CLAUDE-CODE.md. Registered as a bundle boundary in share-pack.json and applied to this distribution by Build-SharePack.ps1; it resolves in the source repository and cannot resolve here.]"
+    },
+    {
+      "root": "tools",
+      "kind": "bundle-boundary",
+      "token": "freshness.py",
+      "reason": "Same as scan.py above -- a bare script name in the compliance narrative, resolving in this repository and lifted into compliance/ by the assembly step. [Cited in tools/claude-dev-practice/TESTING-DISCIPLINE.md. Registered as a bundle boundary in share-pack.json and applied to this distribution by Build-SharePack.ps1; it resolves in the source repository and cannot resolve here.]"
+    },
+    {
+      "root": "tools",
+      "kind": "bundle-boundary",
+      "token": "skills/build-compliance/scripts/test_scan.py",
+      "reason": "Cited by its repository path, twice in this document, as the source of two tests the pack lifts verbatim. One entry covers both citations because the key is document plus token: the two mentions are the same claim about the same file, and keying on line numbers would have made this registry rot on any edit above them. [Cited in tools/claude-dev-practice/TESTING-DISCIPLINE.md. Registered as a bundle boundary in share-pack.json and applied to this distribution by Build-SharePack.ps1; it resolves in the source repository and cannot resolve here.]"
+    },
+    {
+      "root": "tools",
+      "kind": "bundle-boundary",
+      "token": "skills/build-compliance/scripts/scan.py",
+      "reason": "Cited by its repository path as the source of the degrade-to-SKIPPED pattern. Lifted into compliance/ by the assembly step, at which point the citation is rewritten and this entry fails as stale. [Cited in tools/claude-dev-practice/GIT-AND-REVIEW.md. Registered as a bundle boundary in share-pack.json and applied to this distribution by Build-SharePack.ps1; it resolves in the source repository and cannot resolve here.]"
+    },
+    {
+      "root": "tools",
+      "kind": "bundle-boundary",
+      "token": "skills/eval-harness-domain/SKILL.md",
+      "reason": "One of the two eval-harness skills section 2g assesses. The pack ships a redacted copy of the domain one, but the sentence cites the SOURCE -- it is about where the anti-Goodhart primitive already lived, so it names a repository path on purpose. [Cited in tools/claude-dev-practice/GIT-AND-REVIEW.md. Registered as a bundle boundary in share-pack.json and applied to this distribution by Build-SharePack.ps1; it resolves in the source repository and cannot resolve here.]"
+    },
+    {
+      "root": "tools",
+      "kind": "bundle-boundary",
+      "token": "skills/eval-harness-code/SKILL.md",
+      "reason": "The other one, and it is HOLD rather than a lift: 17 of its lines carry tenant references scattered file-wide. So this citation can never resolve inside a pack, and the entry is permanent rather than transitional. [Cited in tools/claude-dev-practice/GIT-AND-REVIEW.md. Registered as a bundle boundary in share-pack.json and applied to this distribution by Build-SharePack.ps1; it resolves in the source repository and cannot resolve here.]"
+    },
+    {
+      "root": "tools",
+      "kind": "bundle-boundary",
+      "token": "skills/eval-harness-domain/SKILL.external.md",
+      "reason": "The redacted external-share variant that ORCHESTRATION.md derives its role separation, auditor contract, cold scoring and dispatcher-control sections from. The pack ships no skills/ tree, so the citation resolves in the repository and dangles in a bundle -- the same shape as the GIT-AND-REVIEW.md and TESTING-DISCIPLINE.md entries above. Keyed on document plus token, so this one entry covers all seven citations of it rather than rotting on a line number. Permanent rather than transitional: the sentence cites the SOURCE the text was derived from, so rewriting it to a shipped path would make the paragraph claim a provenance it does not have. [Cited in tools/claude-dev-practice/ORCHESTRATION.md. Registered as a bundle boundary in share-pack.json and applied to this distribution by Build-SharePack.ps1; it resolves in the source repository and cannot resolve here.]"
     }
   ]
 }

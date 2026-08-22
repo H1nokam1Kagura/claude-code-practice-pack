@@ -1,4 +1,4 @@
-# Verified against
+﻿# Verified against
 
 Every mechanic these documents describe is **observed behaviour, not a documented API contract**.
 The permission ordering, the hook semantics, what a keystroke does, how a rules file is triggered —
@@ -60,7 +60,7 @@ recorded under the table, worst first.
 > sites still carry the flat version — `CODING-WITH-CLAUDE-CODE.md` and `REVERSIBILITY.md`, in its
 > checkpoint table — and this page cannot fix them, because the pass that found this owned the
 > registry and not the documents. They need the *exception* added, not the sentence deleted.
-
+<!-- -->
 > **Two more readings changed a claim, and both were the compression rather than the source.** The
 > hook-decision row recorded `permissionDecision` as taking three values. It takes four: `allow`,
 > `deny`, `ask`, `escalate` — and the missing one is the useful one, because `ask` is what a guard
@@ -83,7 +83,7 @@ recorded under the table, worst first.
 > `../claude-permission-toolkit/README.md` in two places. The pin's marker deliberately stops at
 > *"Compound commands split on"* so that it keeps matching all three while they are widened —
 > extending it to the separator list would make the pin go stale on the edit that fixes the prose.
-
+<!-- -->
 > **Everything else re-read on 2026-08-19 was unchanged**, most of it still verbatim on the page:
 > both `Esc` behaviours, the deny-then-ask-then-allow ordering, the deny floor surviving every mode,
 > the hook-cannot-loosen-a-deny asymmetry, per-tool rule scoping, the reach of a `Read` deny into
@@ -93,7 +93,7 @@ recorded under the table, worst first.
 > host measurement and are now documented as well, so each is held up by two pieces of evidence with
 > uncorrelated failure modes rather than one. Saying "nothing had changed" plainly is worth more
 > than manufacturing a correction to make a pass look productive.
-
+<!-- -->
 > **The row above is the first one where the lookup changed the rule rather than confirming it.**
 > The convention being extracted said a skill description is capped at 1024 characters and that
 > this "is what loads into every system prompt". Both halves were wrong in the same direction:
@@ -103,7 +103,7 @@ recorded under the table, worst first.
 > make room for another skill's, which no lint can see and no error reports. The shipped budget is
 > now labelled a convention on its face, and `skill-schema.json` says so in the file rather than
 > leaving a reader to infer a platform rule from a script.
-
+<!-- -->
 > **The conflict recorded here on 2026-08-16 is now closed, and it closed in favour of the older
 > pin.** The hooks page lists `permissionDecision: "allow"`, which reads as a hook *loosening* a
 > decision, and neither pin was edited on a hunch because whether that overrode a deny **rule** —
@@ -115,7 +115,7 @@ recorded under the table, worst first.
 > like when it is actually followed. One asymmetry arrived with the answer and is easy to get
 > backwards — a hook cannot loosen a **deny**, but it *can* override an **allow**, because exit
 > code 2 short-circuits ahead of rule evaluation entirely.
-
+<!-- -->
 > **And one row above is the case this whole file exists for, arriving a second time.** The
 > per-tool row's evidence used to be four rules found by replay, the second of which was
 > *"`Read(**/.env)` says nothing about `cat .env`"*. Re-reading the source on 2026-08-16 killed

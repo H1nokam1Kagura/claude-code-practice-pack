@@ -1,4 +1,4 @@
-# Always-on instructions — fragment
+﻿# Always-on instructions — fragment
 
 **Paste this into your own always-on project file, or keep it beside one.** It carries only the
 always-on subset: rules that have to be in context before anything is opened, because they bite in
@@ -109,7 +109,7 @@ argument for the table at the top, and it is not an argument about tidiness.
 
 Then check it, because a convention with nothing enforcing it decays:
 
-```
+```bash
 python check_pointer_file.py CLAUDE.md --rules-dir <your gated rules directory>
 ```
 

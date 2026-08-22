@@ -95,6 +95,15 @@ jobs:
         shell: pwsh
         run: ./tools/Test-ScriptQuality.ps1
 
+      # Mirrors the hosted job, and is worth having locally for the same reason the rest of this file
+      # is: the linter that will actually judge this prose lives in the repository the pack gets
+      # contributed to, and finding that out from a red PR is finding it out too late. Needs npx and
+      # a network on first run -- unlike PSScriptAnalyzer above, the fetch is a single line, so it
+      # does not run into this runner's one-line-body limit.
+      - name: The pack's prose passes the destination repository's linter
+        shell: pwsh
+        run: npx --yes markdownlint-cli2@0.23.2 "tools/**/*.md" "PACK-README.md"
+
       - name: Merged-ness gate can fail (negative controls)
         shell: pwsh
         run: ./tools/claude-worktree-toolkit/Test-WorktreeMergedness.ps1 -SelfTest

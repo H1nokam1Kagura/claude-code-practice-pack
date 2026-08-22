@@ -1,4 +1,4 @@
-# `wt` — a parallel-worktree workflow for Claude Code
+﻿# `wt` — a parallel-worktree workflow for Claude Code
 
 A tiny PowerShell command set for people who run **several Claude Code sessions at once**.
 The model: your primary clone hosts `.git` and **nobody works in it**; each unit of work gets
@@ -73,7 +73,8 @@ nwt try the toolkit     # new worktree, cd's you in
 | `rwt` | Tear down one worktree: remove it + delete its branch **only if fully merged**. `-Merge` squash-merges the PR first; `-Branch <b>` targets another; `-DiscardChanges` destroys uncommitted work; `-EvictLiveSession` removes a tree another session holds; `-Force` = both (deprecated); `-Yes` skips the prompt. |
 
 ### The everyday loop
-```
+
+```text
 nwt fix the parser      # -> new worktree 'fix-the-parser', you're in it
 #   …work with Claude…
 cwt "fix the parser"    # commit
@@ -231,7 +232,7 @@ their keep twice over: `bamboozled-quokka` is easier to say out loud across a de
 
 `nwt` and the resume path print a one-line gloss of whatever animal you landed on:
 
-```
+```text
 ✓ now in C:\Users\you\wt\cooked-minke on 'cooked-minke'
   🐋 minke — Smallest baleen rorqual: fast, curious, often solitary
 ```

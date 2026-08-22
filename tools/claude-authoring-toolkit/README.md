@@ -1,4 +1,4 @@
-# claude-authoring-toolkit
+﻿# claude-authoring-toolkit
 
 Two contracts for the files that tell Claude what to do, and **the checks that keep each one
 honest**: a skeleton for the always-on instruction file, and a frontmatter contract for skills.
@@ -74,7 +74,7 @@ Three properties, and it is explicit about the fourth it cannot hold.
 | It is inside its budget | The line default is the documented target; the byte budget is a convention you set. |
 | **Not**: whether a rule *belongs* there | A judgement about where a rule bites. No script will make it, and a green run must not be mistaken for a well-designed file. |
 
-```
+```bash
 python check_pointer_file.py CLAUDE.md --rules-dir .claude/rules
 python check_pointer_file.py CLAUDE.md --rules-dir .claude/rules --base ../the-repo-it-describes
 python check_pointer_file.py --self-test
@@ -82,7 +82,7 @@ python check_pointer_file.py --self-test
 
 **Exit contract**
 
-```
+```text
 0  every check ran and passed
 1  a check FAILED, or a check ran and measured nothing (INCONCLUSIVE), or the target is unreadable
 2  no rules directory, so the duplication check -- the load-bearing one -- does not apply here
@@ -151,7 +151,7 @@ is written twice — once in `SKILL-FRONTMATTER.md` as the shape being argued fo
 nothing compared them. The comparison collapses whitespace, so the two can stay wrapped for their
 own contexts and only a change in wording is a failure.
 
-```
+```bash
 python lint_skills.py <tree-root>
 python lint_skills.py <tree-root> --schema my-schema.json --profile catalogue
 python lint_skills.py --self-test
@@ -196,7 +196,7 @@ module scope, so importing it would lint the repository as a side effect. A cons
 absent, or present but not a literal, is a failure and **never a default** — a check that compares
 four properties while reporting five is the defect it exists to catch.
 
-```
+```bash
 python check_lint_parity.py
 python check_lint_parity.py --self-test
 python check_lint_parity.py --repo-lint <path> --schema <path> --exceptions <path>
@@ -204,7 +204,7 @@ python check_lint_parity.py --repo-lint <path> --schema <path> --exceptions <pat
 
 **Exit contract**
 
-```
+```text
 0  the two agree, or every difference is registered and still real
 1  an unregistered difference, a stale exception, an exception with no reason, or a
    constant that could not be read -- the last is INCONCLUSIVE, which is a failure
@@ -245,7 +245,7 @@ failed loudly; the reverse — a skill no probe covers — did not, so a new ski
 while the summary read all-green. That is the same asymmetry as any gate that accounts for what
 it found rather than for what exists.
 
-```
+```bash
 python eval_skills.py <tree-root> --probes probes.json
 python eval_skills.py <tree-root> --probes probes.json --write-back
 python eval_skills.py <tree-root> --probes probes.json --coverage-only  # the free half only
@@ -323,7 +323,7 @@ resolve.
 
 ## Files
 
-```
+```text
 CLAUDE.md.template       the always-on skeleton -- structure only, no content
 check_pointer_file.py    the check that keeps it one, incl. --self-test
 SKILL-FRONTMATTER.md     the frontmatter contract in prose, and why each field is there
